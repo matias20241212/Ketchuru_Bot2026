@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
 
+const cron = require("node-cron");
+
 const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
@@ -22,7 +24,7 @@ const client = new Client({
 });
 
 // =========================
-// DEBUG (AQUÍ VA LO QUE TE DIJE)
+// DEBUG
 // =========================
 client.on('debug', console.log);
 client.on('error', console.error);
@@ -33,17 +35,76 @@ client.on('warn', console.warn);
 // =========================
 client.once('ready', () => {
     console.log(`✅ Conectado como ${client.user.tag}`);
+
+    // 🔁 corre cada hora
+    cron.schedule('0 * * * *', async () => {
+
+        const channel = client.channels.cache.get("1512250127518011613");
+        if (!channel) return;
+
+        const { saturday, tuesday } = getAdminAbuseTime();
+
+        const now = new Date();
+        const day = now.getUTCDay(); // 2 martes, 6 sábado
+        const hour = now.getUTCHours();
+
+        // =========================
+        // 🔥 AVISO 12 HORAS ANTES
+        // =========================
+        if (day === 6 && hour === (saturday - 12)) {
+            channel.send(`⏰ 12 HORAS PARA ADMIN ABUSE (sábado) - ${saturday}:00 UTC`);
+        }
+
+        if (day === 2 && hour === (tuesday - 12)) {
+            channel.send(`⏰ 12 HORAS PARA ADMIN ABUSE (martes) - ${tuesday}:00 UTC`);
+        }
+
+        // =========================
+        // 🔥 AVISO EN EL MOMENTO
+        // =========================
+        if (day === 6 && hour === saturday) {
+            channel.send(`🔥 ADMIN ABUSE INICIADO (sábado) ${saturday}:00 UTC (Hammer time)`);
+        }
+
+        if (day === 2 && hour === tuesday) {
+            channel.send(`🔥 ADMIN ABUSE INICIADO (martes) ${tuesday}:00 UTC (Hammer time)`);
+        }
+    });
 });
 
 // =========================
-// DATOS
+// FUNCION HORARIOS
 // =========================
-const mensajes = new Map();
-const statsServidor = new Map();
+function getAdminAbuseTime() {
+    const month = new Date().getUTCMonth() + 1;
+
+    let saturday = 16;
+    let tuesday = 19;
+
+    if (month === 5) {
+        saturday = 15;
+        tuesday = 18;
+    }
+
+    if (month === 9) {
+        saturday = 16;
+        tuesday = 19;
+    }
+
+    if (month === 10) {
+        saturday = 17;
+        tuesday = 20;
+    }
+
+    return { saturday, tuesday };
+}
 
 // =========================
 // MENSAJES
 // =========================
+const mensajes = new Map();
+const statsServidor = new Map();
+
 client.on('messageCreate', async (message) => {
 
     if (message.author.bot) return;
