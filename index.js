@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 
 const cron = require("node-cron");
+const fs = require("fs");
+const path = require("path");
 
 const PORT = process.env.PORT || 3000;
 
@@ -24,6 +26,41 @@ const client = new Client({
 });
 
 // =========================
+// 💰 ECONOMÍA (50 MONEDAS)
+// =========================
+let balances = {};
+
+const balanceFile = "./data/balance.json";
+
+if (fs.existsSync(balanceFile)) {
+    balances = JSON.parse(fs.readFileSync(balanceFile));
+}
+
+function saveBalances() {
+    fs.writeFileSync(balanceFile, JSON.stringify(balances, null, 2));
+}
+
+// =========================
+// CARGA DE COMANDOS
+// =========================
+client.commands = new Map();
+
+const foldersPath = path.join(__dirname, "commands");
+const commandFolders = fs.readdirSync(foldersPath);
+
+for (const folder of commandFolders) {
+    const commandsPath = path.join(foldersPath, folder);
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
+
+    for (const file of commandFiles) {
+        const filePath = path.join(commandsPath, file);
+        const command = require(filePath);
+
+        client.commands.set(command.name, command);
+    }
+}
+
+// =========================
 // DEBUG
 // =========================
 client.on('debug', console.log);
@@ -36,7 +73,6 @@ client.on('warn', console.warn);
 client.once('ready', () => {
     console.log(`✅ Conectado como ${client.user.tag}`);
 
-    // 🔁 corre cada hora
     cron.schedule('0 * * * *', async () => {
 
         const channel = client.channels.cache.get("1512250127518011613");
@@ -45,12 +81,9 @@ client.once('ready', () => {
         const { saturday, tuesday } = getAdminAbuseTime();
 
         const now = new Date();
-        const day = now.getUTCDay(); // 2 martes, 6 sábado
+        const day = now.getUTCDay();
         const hour = now.getUTCHours();
 
-        // =========================
-        // 🔥 AVISO 12 HORAS ANTES
-        // =========================
         if (day === 6 && hour === (saturday - 12)) {
             channel.send(`⏰ 12 HORAS PARA ADMIN ABUSE (sábado) - ${saturday}:00 UTC`);
         }
@@ -59,9 +92,6 @@ client.once('ready', () => {
             channel.send(`⏰ 12 HORAS PARA ADMIN ABUSE (martes) - ${tuesday}:00 UTC`);
         }
 
-        // =========================
-        // 🔥 AVISO EN EL MOMENTO
-        // =========================
         if (day === 6 && hour === saturday) {
             channel.send(`🔥 ADMIN ABUSE INICIADO (sábado) ${saturday}:00 UTC (Hammer time)`);
         }
@@ -100,7 +130,7 @@ function getAdminAbuseTime() {
 }
 
 // =========================
-// MENSAJES
+// MENSAJES + COMANDOS + ECONOMÍA
 // =========================
 const mensajes = new Map();
 const statsServidor = new Map();
@@ -112,6 +142,32 @@ client.on('messageCreate', async (message) => {
 
     const guildId = message.guild.id;
     const userId = message.author.id;
+
+    // =========================
+    // 💰 DAR 50 MONEDAS SOLO 1 VEZ
+    // =========================
+    if (!balances[userId]) {
+        balances[userId] = 50;
+        saveBalances();
+    }
+
+    // =========================
+    // 🔥 SISTEMA DE COMANDOS (!)
+    // =========================
+    if (message.content.startsWith("!")) {
+
+        const args = message.content.slice(1).trim().split(/ +/);
+        const commandName = args.shift().toLowerCase();
+
+        const command = client.commands.get(commandName);
+        if (command) {
+            return command.execute(message, args);
+        }
+    }
+
+    // =========================
+    // TU SISTEMA ACTUAL
+    // =========================
 
     if (!mensajes.has(guildId)) {
         mensajes.set(guildId, new Map());
