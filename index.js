@@ -32,8 +32,13 @@ let balances = {};
 
 const balanceFile = "./data/balance.json";
 
+// cargar datos seguros
 if (fs.existsSync(balanceFile)) {
-    balances = JSON.parse(fs.readFileSync(balanceFile));
+    try {
+        balances = JSON.parse(fs.readFileSync(balanceFile));
+    } catch (e) {
+        balances = {};
+    }
 }
 
 function saveBalances() {
