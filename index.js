@@ -22,19 +22,28 @@ const client = new Client({
 });
 
 // =========================
-// DATOS
+// DEBUG (AQUÍ VA LO QUE TE DIJE)
 // =========================
+client.on('debug', console.log);
+client.on('error', console.error);
+client.on('warn', console.warn);
 
-// guildId -> userId -> count
-const mensajes = new Map();
-
-// guildId -> { total, firstMessageTime }
-const statsServidor = new Map();
-
+// =========================
+// READY
+// =========================
 client.once('ready', () => {
     console.log(`✅ Conectado como ${client.user.tag}`);
 });
 
+// =========================
+// DATOS
+// =========================
+const mensajes = new Map();
+const statsServidor = new Map();
+
+// =========================
+// MENSAJES
+// =========================
 client.on('messageCreate', async (message) => {
 
     if (message.author.bot) return;
@@ -107,6 +116,7 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-// IMPORTANTE:
-// En Render usa la variable de entorno TOKEN
+// =========================
+// LOGIN
+// =========================
 client.login(process.env.TOKEN);
