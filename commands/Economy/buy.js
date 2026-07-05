@@ -1,7 +1,17 @@
 const { addItem } = require("../../systems/inventory");
 const { shop } = require("../../systems/shop");
 
-let balances = require("../../data/balance.json");
+const fs = require("fs");
+const path = require("path");
+
+const balanceFile = path.join(__dirname, "../../data/balance.json");
+let balances = fs.existsSync(balanceFile)
+  ? JSON.parse(fs.readFileSync(balanceFile))
+  : {};
+
+function saveBalances() {
+  fs.writeFileSync(balanceFile, JSON.stringify(balances, null, 2));
+}
 
 module.exports = {
     name: "buy",
