@@ -1,49 +1,56 @@
-!inventario
-!inventario @user
-
-const {
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-    EmbedBuilder
-} = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { inventory } = require("../../systems/inventory");
 
 module.exports = {
-    name: "inventario",
+  name: "inventario",
 
-    async execute(message, args, client, inventory) {
+  async execute(message, args) {
 
-        const userId = message.author.id;
+    const user =
+      message.mentions.users.first() || message.author;
 
-        if (!inventory[userId] || Object.keys(inventory[userId]).length === 0) {
-            return message.reply("🎒 Tu inventario está vacío.");
-        }
+    const isOwn = user.id === message.author.id;
 
-        const items = Object.keys(inventory[userId]);
+    const userInventory = inventory[user.id];
 
-        const embed = new EmbedBuilder()
-            .setTitle("🎒 Inventario")
-            .setDescription(
-                items.map((item, i) =>
-                    `**${i + 1}.** ${item} x${inventory[userId][item]}`
-                ).join("\n")
-            );
-
-        // BOTONES (máx 5 por fila Discord)
-        const row = new ActionRowBuilder();
-
-        items.slice(0, 5).forEach((item, index) => {
-            row.addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`inv_${userId}_${item}`)
-                    .setLabel(item)
-                    .setStyle(ButtonStyle.Primary)
-            );
-        });
-
-        return message.reply({
-            embeds: [embed],
-            components: [row]
-        });
+    if (!userInventory || Object.keys(userInventory).length === 0) {
+      return message.reply(
+        isOwn
+          ? "🎒 Tu inventario está vacío."
+          : `🎒 El inventario de **${user.username}** está vacío.`
+      );
     }
+
+    let text = `🎒 **Inventario de ${user.username}**\n\n`;
+
+    const row = new ActionRowBuilder();
+
+    let i = 0;
+
+    for (const [item, amount] of Object.entries(userInventory)) {
+
+      text += `• ${item} x${amount}\n`;
+
+      // botones solo si es tu inventario
+      if (isOwn && i < 5) {
+        row.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`inv_${message.author.id}_${item}`)
+            .setLabel(`${item} x${amount}`)
+            .setStyle(ButtonStyle.Secondary)
+        );
+      }
+
+      i++;
+    }
+
+    if (isOwn) {
+      return message.reply({
+        content: text,
+        components: [row]
+      });
+    }
+
+    return message.reply(text);
+  }
 };
