@@ -146,39 +146,54 @@ client.once("ready", () => {
 
     console.log(`✅ Conectado como ${client.user.tag}`);
 
-    const { checkRestock } = require("./systems/shop");
-    const {
-        common,
-        uncommon,
-        rare,
-        epic,
-        legendary,
-        mythic,
-        secret_bad,
-        secret_medium,
-        secret_big,
-        og
-    } = require("./systems/shopData");
+    // =========================
+    // 🛒 SHOP SYSTEM (RESTOCK + HAMMER TIME)
+    // =========================
+    const { restockShop } = require("./systems/shop");
+    const cron = require("node-cron");
 
-    // =========================
-    // 🛒 SHOP RESTOCK SYSTEM
-    // =========================
     setInterval(() => {
-        checkRestock([
-            ...common,
-            ...uncommon,
-            ...rare,
-            ...epic,
-            ...legendary,
-            ...mythic,
-            ...secret_bad,
-            ...secret_medium,
-            ...secret_big,
-            ...og
-        ]);
-    }, 60000); // cada 1 minuto
 
-    // 👇 TU CÓDIGO YA EXISTENTE (cron)
+        const now = new Date();
+
+        // 🇨🇱 HORA CHILE
+        const chileHour = (now.getUTCHours() - 4 + 24) % 24;
+        const day = now.getUTCDay();
+
+        let shouldRestock = false;
+
+        // 🟡 LUN - JUE
+        if (day >= 1 && day <= 4 && chileHour === 20) {
+            shouldRestock = true;
+        }
+
+        // 🔵 VIERNES
+        if (day === 5 && (chileHour === 8 || chileHour === 20)) {
+            shouldRestock = true;
+        }
+
+        // 🔴 SÁBADO
+        if (day === 6 && (chileHour % 6 === 0 || chileHour === 20)) {
+            shouldRestock = true;
+        }
+
+        // 🟢 DOMINGO
+        if (day === 0 && (chileHour === 8 || chileHour === 20)) {
+            shouldRestock = true;
+        }
+
+        if (shouldRestock) {
+            restockShop();
+            console.log("🛒 HAMMER TIME RESTOCK");
+        }
+
+    }, 60 * 60 * 1000);
+
+
+    // =========================
+    // 👇 ADMIN ABUSE (TU SISTEMA ORIGINAL)
+    // =========================
+
     cron.schedule('0 * * * *', async () => {
 
         const channel = client.channels.cache.get("1512250127518011613");
@@ -206,34 +221,8 @@ client.once("ready", () => {
             channel.send(`🔥 ADMIN ABUSE INICIADO (martes) ${tuesday}:00 UTC (Hammer time)`);
         }
     });
+
 });
-
-// =========================
-// FUNCION HORARIOS
-// =========================
-function getAdminAbuseTime() {
-    const month = new Date().getUTCMonth() + 1;
-
-    let saturday = 16;
-    let tuesday = 19;
-
-    if (month === 5) {
-        saturday = 15;
-        tuesday = 18;
-    }
-
-    if (month === 9) {
-        saturday = 16;
-        tuesday = 19;
-    }
-
-    if (month === 10) {
-        saturday = 17;
-        tuesday = 20;
-    }
-
-    return { saturday, tuesday };
-}
 
 // =========================
 // MENSAJES + COMANDOS + ECONOMÍA

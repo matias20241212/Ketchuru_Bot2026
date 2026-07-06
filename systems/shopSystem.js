@@ -1,45 +1,69 @@
-const data = require("../data/shopData");
+const {
+  common,
+  uncommon,
+  rare,
+  epic,
+  legendary,
+  mythic,
+  secret_bad,
+  secret_medium,
+  secret_big,
+  og
+} = require("./shopData");
 
-const rarityChances = [
-  { rarity: "common", chance: 55 },
-  { rarity: "uncommon", chance: 45 },
-  { rarity: "epic", chance: 35 },
-  { rarity: "legendary", chance: 27.5 },
-  { rarity: "mythic", chance: 20 },
-  { rarity: "secret_bad", chance: 12.5 },
-  { rarity: "secret_medium", chance: 7.5 },
-  { rarity: "secret_big", chance: 2.5 },
-  { rarity: "og", chance: 0.05 }
+// =========================
+// 🎲 PROBABILIDADES
+// =========================
+
+const rarities = [
+  { name: "common", pool: common, chance: 55 },
+  { name: "uncommon", pool: uncommon, chance: 20 },
+  { name: "rare", pool: rare, chance: 10 },
+  { name: "epic", pool: epic, chance: 6 },
+  { name: "legendary", pool: legendary, chance: 4 },
+  { name: "mythic", pool: mythic, chance: 2.5 },
+  { name: "secret_bad", pool: secret_bad, chance: 1.2 },
+  { name: "secret_medium", pool: secret_medium, chance: 0.8 },
+  { name: "secret_big", pool: secret_big, chance: 0.45 },
+  { name: "og", pool: og, chance: 0.05 }
 ];
 
-function getRandomRarity() {
-  const roll = Math.random() * 100;
+function random(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function roll() {
+  const r = Math.random() * 100;
   let acc = 0;
 
-  for (const r of rarityChances) {
-    acc += r.chance;
-    if (roll <= acc) return r.rarity;
+  for (const x of rarities) {
+    acc += x.chance;
+    if (r <= acc) return x;
   }
 
-  return "common";
+  return rarities[0];
 }
 
-function getItem(rarity) {
-  const pool = data[rarity];
-  return pool[Math.floor(Math.random() * pool.length)];
-}
+// =========================
+// 🛒 GENERAR TIENDA 5x4
+// =========================
 
 function generateShop() {
-  const items = [];
+  const shop = [];
 
   for (let i = 0; i < 20; i++) {
-    const rarity = getRandomRarity();
-    const item = getItem(rarity);
+    const rarity = roll();
+    const item = random(rarity.pool);
 
-    if (item) items.push({ ...item, rarity });
+    shop.push({
+      emoji: item.emoji,
+      price: item.price,
+      rarity: rarity.name,
+      effect: item.effect
+    });
   }
 
-  return items;
+  return shop;
 }
 
 module.exports = { generateShop };

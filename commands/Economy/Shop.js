@@ -1,16 +1,11 @@
-const { shop } = require("../../systems/shop");
+const { formatShop } = require("../../systems/shop");
 
 module.exports = {
-    name: "shop",
+  name: "shop",
 
-    execute(message) {
+  execute(message) {
+    const text = formatShop();
 
-        let text = "🛒 **TIENDA KETCHURU**\n\n";
-
-        for (const item of shop.items) {
-            text += `${item.emoji} | ${item.price} 🪙 | Stock: ${item.stock}\n`;
-        }
-
-        return message.reply(text);
-    }
+    return message.channel.send(text + `\n\n💡 Usa: !buy <emoji>`);
+  }
 };
