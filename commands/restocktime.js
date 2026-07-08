@@ -1,43 +1,53 @@
-const fs = require("fs");
-const path = require("path");
+const { DateTime } = require("luxon");
+const { getNextHammerTime } = require("../hammertime");
+
 
 module.exports = {
     nombre: "restocktime",
 
     async ejecutar(message) {
 
-        const archivo = path.join(__dirname, "../datos/restocktime.json");
+        const proximo = getNextHammerTime();
 
-        const datos = JSON.parse(fs.readFileSync(archivo, "utf8"));
-
-        const ahora = new Date();
-        const proximo = new Date(datos.proximoRestock);
-
-        let diferencia = proximo - ahora;
-
-        if (diferencia <= 0) {
-            return message.reply("🛒 El restock está ocurriendo o ya debería haberse realizado.");
+        if (!proximo) {
+            return message.reply("⚒️ No se pudo calcular el próximo HAMMER TIME.");
         }
 
-        const horas = Math.floor(diferencia / 3600000);
-        diferencia %= 3600000;
 
-        const minutos = Math.floor(diferencia / 60000);
-        diferencia %= 60000;
+        function getUTCList(date) {
+            const zones = [];
 
-        const segundos = Math.floor(diferencia / 1000);
+            for (let offset = -12; offset <= 14; offset++) {
+
+                const name = offset === 0
+                    ? "UTC±00"
+                    : offset > 0
+                        ? `UTC+${offset}`
+                        : `UTC${offset}`;
+
+                const time = date
+                    .setZone("UTC")
+                    .plus({ hours: offset })
+                    .toFormat("HH:mm");
+
+                zones.push(`${name}: ${time}`);
+            }
+
+            return zones.join("\n");
+        }
+
+
+        const listaUTC = getUTCList(proximo);
 
 
         message.reply(
-`🛒 **Próximo Restock**
+`⚒️ **HAMMER TIME GLOBAL**
 
-⏰ Faltan:
-**${horas}h ${minutos}m ${segundos}s**
+🌍 Próximo restock:
 
-📅 Próximo:
-${proximo.toLocaleString("es-CL")}
+${listaUTC}
 
-🇨🇱 Hora de Chile`
+🛒 Ketchuru Shop`
         );
     }
 };
