@@ -1,5 +1,5 @@
 const { DateTime } = require("luxon");
-const config = require("./hammertime.json");
+const { getNextHammerTime, getUTCList } = require("../systems/hammertime.js");
 
 const timezones = [
   "Pacific/Pago_Pago",        // UTC-11 Samoa Americana
