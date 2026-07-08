@@ -1,5 +1,5 @@
 const { DateTime } = require("luxon");
-const { getNextHammerTime } = require("../hammertime");
+const { getNextHammerTime, getUTCList } = require("../systems/hammertime.js");
 
 
 module.exports = {
