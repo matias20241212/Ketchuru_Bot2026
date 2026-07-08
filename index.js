@@ -15,7 +15,9 @@ app.listen(PORT, () => {
     console.log(`Servidor iniciado en el puerto ${PORT}`);
 });
 
-const { Client, GatewayIntentBits } = require('discord.js');
+
+const { Client, GatewayIntentBits } = require("discord.js");
+
 
 const client = new Client({
     intents: [
@@ -23,6 +25,47 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
     ]
+});
+
+
+// Cargar comandos desde la carpeta comandos/
+require("./handlers/comandos")(client);
+
+
+// Sistema de comandos con !
+client.on("messageCreate", async (message) => {
+
+    if (message.author.bot) return;
+
+    if (!message.content.startsWith("!")) return;
+
+
+    const args = message.content
+    .slice(1)
+    .trim()
+    .split(/ +/);
+
+    const nombre = args.shift().toLowerCase();
+
+
+    const comando = client.comandos.get(nombre);
+
+
+    if (!comando) return;
+
+
+    try {
+
+        await comando.ejecutar(message, args);
+
+    } catch (error) {
+
+        console.error(error);
+
+        message.reply("❌ Hubo un error ejecutando el comando.");
+
+    }
+
 });
 
 // =========================
