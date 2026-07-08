@@ -6,7 +6,7 @@ module.exports = (client) => {
     client.comandos = new Map();
 
 
-    const carpeta = path.join(__dirname, "../comandos");
+    const carpeta = path.join(__dirname, "../commands");
 
 
     const archivos = fs.readdirSync(carpeta)
