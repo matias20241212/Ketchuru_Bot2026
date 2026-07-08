@@ -1,0 +1,11 @@
+{
+  "ID_DEL_USUARIO": {
+    "monedas": 0,
+    "mensajes": 0,
+    "inventario": [],
+    "tragamonedas": {
+      "victorias": 0,
+      "derrotas": 0
+    }
+  }
+}

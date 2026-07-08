@@ -1,0 +1,16 @@
+{
+  "ultimoRestock": "",
+  "proximoRestock": "",
+  "items": [],
+  "probabilidades": {
+    "Common": 55,
+    "Uncommon": 20,
+    "Rare": 10,
+    "Epic": 6,
+    "Legendary": 4,
+    "Mythic": 2.5,
+    "Secret Bad": 1.2,
+    "Secret Medium": 0.8,
+    "Secret Big": 0.5
+  }
+}
