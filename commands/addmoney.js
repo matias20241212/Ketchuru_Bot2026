@@ -87,7 +87,7 @@ module.exports = {
 
         const archivo = path.join(
             __dirname,
-            "../datos/usuarios.json"
+            "../data/usuarios.json"
         );
 
 
