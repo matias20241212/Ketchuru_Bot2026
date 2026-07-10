@@ -5,7 +5,7 @@ const path = require("path");
 const moneyPath = path.join(__dirname, "../data/balance.json");
 const inventoryPath = path.join(__dirname, "../data/inventory.json");
 const messagesPath = path.join(__dirname, "../data/mensajes.json");
-const streaksPath = path.join(__dirname, "../datos/streaks.json");
+const streaksPath = path.join(__dirname, "../data/streaks.json");
 
 
 function leerJSON(ruta) {
