@@ -5,9 +5,7 @@ module.exports = (client) => {
 
     client.comandos = new Map();
 
-
     const carpeta = path.join(__dirname, "../commands");
-
 
     const archivos = fs.readdirSync(carpeta)
         .filter(archivo => archivo.endsWith(".js"));
@@ -20,19 +18,27 @@ module.exports = (client) => {
         );
 
 
-        if (!comando.nombre || !comando.ejecutar) {
+        // Acepta formato antiguo y nuevo
+        const nombre = comando.nombre || comando.name;
+        const ejecutar = comando.ejecutar || comando.execute;
+
+
+        if (!nombre || !ejecutar) {
             console.log(`⚠️ ${archivo} no tiene formato correcto`);
             continue;
         }
 
 
         client.comandos.set(
-            comando.nombre,
-            comando
+            nombre,
+            {
+                nombre,
+                ejecutar
+            }
         );
 
 
-        console.log(`✅ Comando cargado: ${comando.nombre}`);
+        console.log(`✅ Comando cargado: ${nombre}`);
 
     }
 
