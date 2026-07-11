@@ -39,7 +39,7 @@ module.exports = {
 
 
 
-const hammerTimes = "⚒️ Próximos horarios disponibles en HAMMER TIME GLOBAL";
+        const hammerTimes = "⚒️ Próximos horarios disponibles en HAMMER TIME GLOBAL";
 
 
         const canal = message.guild.channels.cache.get(
@@ -53,7 +53,7 @@ const hammerTimes = "⚒️ Próximos horarios disponibles en HAMMER TIME GLOBAL
 
 🛒 **KETCHURU SHOP SE HA RESTOCKEADO!**
 
-${formatShop()}
+${formatShop().slice(0, 1900)}
 
 💡 Usa \`!buy <emoji>\`
 
@@ -63,14 +63,15 @@ ${formatShop()}
 ${hammerTimes}`;
 
 
-if (canal) {
-    canal.send(texto).catch(console.error);
-}
+
+        if (canal) {
+            canal.send(texto).catch(console.error);
+        }
 
 
-message.reply(
-    "✅ Restock realizado correctamente."
-);
+        message.reply(
+            "✅ Restock realizado correctamente."
+        );
 
     }
 

@@ -1,4 +1,4 @@
-${formatShop().slice(0, 1900)}
+
   const shop = currentShop;
 
   let text = `🛒 KETCHURU SHOP\n\n`;
