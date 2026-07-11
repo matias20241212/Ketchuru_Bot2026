@@ -1,18 +1,18 @@
-const fs = require("fs");
-const path = require("path");
+const { restockShop, formatShop } = require("../systems/shop");
+const { getNextHammerTimes } = require("../commands/restockadmin");
 
 
 const ROLES_PERMITIDOS = [
-    "1465524197085155420", // 👑 Owner
-    "1512618062917144708", // 👪 Hermano
-    "1495243561883533342", // ♕ Co Owner
-    "1516897210862931978", // 🎥 Youtuber grande (+1M)
-    "1516896452889153646", // 🎥 Youtuber Mediano
-    "1512179364194947343", // 🎥 Youtuber prometedor
-    "1497041324631658586", // 🛡️ Staff
-    "1465523926431039610", // 🛠️ MOD | Jefatura
-    "1522003060426276905", // 🛠️ MOD | Avanzado
-    "1522002541355732992"  // 🛠️ MOD | Principiante
+    "1465524197085155420",
+    "1512618062917144708",
+    "1495243561883533342",
+    "1516897210862931978",
+    "1516896452889153646",
+    "1512179364194947343",
+    "1497041324631658586",
+    "1465523926431039610",
+    "1522003060426276905",
+    "1522002541355732992"
 ];
 
 
@@ -35,78 +35,49 @@ module.exports = {
         }
 
 
-        const archivo = path.join(
-            __dirname,
-            "../datos/restock.json"
+
+        // Generar nuevo stock
+        restockShop();
+
+
+
+        const hammerTimes = getNextHammerTimes()
+            .map((hora, index) =>
+                `${index + 1}. ${hora}`
+            )
+            .join("\n");
+
+
+
+        const canal = message.guild.channels.cache.get(
+            "1523399225071894659"
         );
 
 
-        let datos;
+        const texto =
+
+`<@&1523402217556672672>
+
+🛒 **KETCHURU SHOP SE HA RESTOCKEADO!**
+
+${formatShop()}
+
+💡 Usa \`!buy <emoji>\`
+
+⚒️ **HAMMER TIME GLOBAL**
+
+🌍 Próximos horarios:
+${hammerTimes}`;
 
 
-        try {
 
-            datos = JSON.parse(
-                fs.readFileSync(archivo, "utf8")
-            );
-
-        } catch {
-
-            datos = {
-                ultimoRestock: "",
-                proximoRestock: "",
-                items: [],
-                probabilidades: {}
-            };
-
+        if (canal) {
+            canal.send(texto);
         }
 
 
-
-        // Aquí después conectaremos el generador de objetos
-        // de las 20 casillas de la tienda
-
-        datos.items = [];
-
-
-
-        const ahora = new Date();
-
-
-        const siguiente = new Date();
-
-        siguiente.setDate(
-            siguiente.getDate() + 1
-        );
-
-        siguiente.setHours(
-            20,
-            0,
-            0,
-            0
-        );
-
-
-        datos.ultimoRestock = ahora.toISOString();
-
-        datos.proximoRestock = siguiente.toISOString();
-
-
-
-        fs.writeFileSync(
-            archivo,
-            JSON.stringify(datos, null, 2)
-        );
-
-
-
         message.reply(
-`✅ **Restock realizado**
-
-🛒 La tienda fue actualizada.
-
-⏰ Próximo restock:
-${siguiente.toLocaleString("es-CL")}`
+            "✅ Restock realizado correctamente."
         );
 
 
