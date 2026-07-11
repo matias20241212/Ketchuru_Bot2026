@@ -1,6 +1,4 @@
 const { restockShop, formatShop } = require("../systems/shop");
-const { getNextHammerTimes } = require("../commands/restockadmin");
-
 
 const ROLES_PERMITIDOS = [
     "1465524197085155420",
@@ -41,12 +39,7 @@ module.exports = {
 
 
 
-        const hammerTimes = getNextHammerTimes()
-            .map((hora, index) =>
-                `${index + 1}. ${hora}`
-            )
-            .join("\n");
-
+const hammerTimes = "⚒️ Próximos horarios disponibles en HAMMER TIME GLOBAL";
 
 
         const canal = message.guild.channels.cache.get(

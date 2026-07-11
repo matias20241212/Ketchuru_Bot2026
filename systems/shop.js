@@ -22,7 +22,12 @@ function formatShop() {
   text += `┌────────────────┬────────────────┬────────────────┬────────────────┬────────────────┐\n`;
 
   for (let i = 0; i < 20; i++) {
-    const item = shop[i];
+
+    const item = shop[i] || {
+      price: 0,
+      emoji: "❓",
+      rarity: "Empty"
+    };
 
     const line1 = `${item.price} 🪙`;
     const line2 = `${item.emoji}`;
@@ -31,7 +36,10 @@ function formatShop() {
     const cell = `${line1}\n${line2}\n${line3}`;
 
     text += `│ ${cell.padEnd(14)} `;
-    if ((i + 1) % 5 === 0) text += `│\n├────────────────┼────────────────┼────────────────┼────────────────┼────────────────┤\n`;
+
+    if ((i + 1) % 5 === 0) {
+      text += `│\n├────────────────┼────────────────┼────────────────┼────────────────┼────────────────┤\n`;
+    }
   }
 
   return text;
