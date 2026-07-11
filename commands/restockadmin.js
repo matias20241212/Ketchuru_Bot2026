@@ -63,16 +63,14 @@ ${formatShop()}
 ${hammerTimes}`;
 
 
+if (canal) {
+    canal.send(texto).catch(console.error);
+}
 
-        if (canal) {
-            canal.send(texto);
-        }
 
-
-        message.reply(
-            "✅ Restock realizado correctamente."
-        );
-
+message.reply(
+    "✅ Restock realizado correctamente."
+);
 
     }
 
