@@ -1,6 +1,7 @@
 const fs = require("fs");
 
 const balanceFile = "./data/balance.json";
+const tragamonedasMultiplierFile = "./data/tragamonedasMultiplier.json";
 
 function load() {
     if (!fs.existsSync(balanceFile)) return {};
@@ -11,12 +12,23 @@ function save(data) {
     fs.writeFileSync(balanceFile, JSON.stringify(data, null, 2));
 }
 
+function loadTragamonedasMultiplier() {
+    if (!fs.existsSync(tragamonedasMultiplierFile)) return 1;
+
+    const data = JSON.parse(
+        fs.readFileSync(tragamonedasMultiplierFile)
+    );
+
+    return data.level || 1;
+}
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 module.exports = {
     name: "tragamonedas",
+
     async execute(message, args) {
 
         let balances = load();
@@ -62,33 +74,41 @@ module.exports = {
             await sleep(350);
         }
 
+
         // =========================
         // 🎯 RESULTADO FINAL 3x3
         // =========================
+
         const grid = [
             Array.from({ length: 3 }, () => emojis[Math.floor(Math.random() * emojis.length)]),
             Array.from({ length: 3 }, () => emojis[Math.floor(Math.random() * emojis.length)]),
             Array.from({ length: 3 }, () => emojis[Math.floor(Math.random() * emojis.length)])
         ];
 
+
         const all = grid.flat();
 
         const count = {};
+
         for (const e of all) {
             count[e] = (count[e] || 0) + 1;
         }
+
 
         let topEmoji = Object.keys(count).reduce((a, b) =>
             count[a] > count[b] ? a : b
         );
 
+
         let veces = count[topEmoji];
 
         let multiplier = 0;
 
+
         // =========================
         // 💎 DIAMANTE
         // =========================
+
         if (topEmoji === "💎") {
 
             const tabla = {
@@ -104,9 +124,11 @@ module.exports = {
             multiplier = tabla[veces] || 0;
         }
 
+
         // =========================
         // 🎰 OTROS EMOJIS
         // =========================
+
         else {
 
             const tabla = {
@@ -123,15 +145,33 @@ module.exports = {
             multiplier = tabla[veces] || 0;
         }
 
-        let ganancia = multiplier === 0 ? -bet : Math.floor(bet * multiplier);
+
+        // =========================
+        // 🎰 MULTIPLICADOR GLOBAL
+        // =========================
+
+        const premioMultiplier = loadTragamonedasMultiplier();
+
+
+        let ganancia = multiplier === 0
+            ? -bet
+            : Math.floor(bet * multiplier * premioMultiplier);
+
+
 
         balances[userId] += ganancia;
 
-        if (balances[userId] < 0) balances[userId] = 0;
+
+        if (balances[userId] < 0) {
+            balances[userId] = 0;
+        }
+
 
         save(balances);
 
+
         await sleep(400);
+
 
         msg.edit(
             `🎰 SLOT 3x3 FINAL\n\n` +
@@ -141,6 +181,7 @@ module.exports = {
             `🏆 Mejor: ${topEmoji} x${veces}\n` +
             `🎲 Apuesta: ${bet}\n` +
             `⚡ Mult: x${multiplier}\n` +
+            `🎰 Bonus tragamonedas: x${premioMultiplier}\n` +
             `💰 Cambio: ${ganancia}\n` +
             `💳 Balance: ${balances[userId]}`
         );

@@ -51,12 +51,11 @@ module.exports = {
         // =========================
         // ✔ COMPRA EXITOSA
         // =========================
-        balances[userId] -= item.price;
+     balances[userId] -= item.price;
+saveBalances();
 
-        item.stock -= 1;
+item.stock -= 1;
 
-        addItem(userId, item.emoji, 1);
+addItem(userId, item.emoji, 1);
 
-        return message.reply("✔ Comprado !");
-    }
-};
+return message.reply("✔ Comprado !");

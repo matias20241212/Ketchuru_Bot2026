@@ -1,37 +1,66 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
-const { inventory } = require("../systems/inventory"); // tu data
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { getInventory } = require("../systems/inventory");
 
 module.exports = {
-name: "inventario",
+    name: "inventory",
 
-async execute(message) {
+    async execute(message) {
 
-    const userId = message.author.id;
-    const userInv = inventory[userId] || {};
+        const userId = message.author.id;
 
-    if (Object.keys(userInv).length === 0) {
-        return message.reply("🎒 Tu inventario está vacío.");
+        const inventory = getInventory(userId);
+
+        const items = Object.entries(inventory);
+
+
+        if (items.length === 0) {
+            return message.reply("🎒 Tu inventario está vacío.");
+        }
+
+
+        let text = "";
+
+        for (const [item, amount] of items) {
+            text += `${item} x${amount}\n`;
+        }
+
+
+        const embed = new EmbedBuilder()
+            .setTitle(`🎒 Inventario de ${message.author.username}`)
+            .setDescription(text)
+            .setColor("Blue");
+
+
+        const buttons = new ActionRowBuilder()
+            .addComponents(
+
+                new ButtonBuilder()
+                    .setCustomId("use_item")
+                    .setLabel("🎮 Usar")
+                    .setStyle(ButtonStyle.Success),
+
+                new ButtonBuilder()
+                    .setCustomId("use_amount")
+                    .setLabel("🔢 Usar cantidad")
+                    .setStyle(ButtonStyle.Primary),
+
+                new ButtonBuilder()
+                    .setCustomId("sell_item")
+                    .setLabel("💰 Vender")
+                    .setStyle(ButtonStyle.Danger),
+
+                new ButtonBuilder()
+                    .setCustomId("sell_amount")
+                    .setLabel("💵 Vender cantidad")
+                    .setStyle(ButtonStyle.Secondary)
+
+            );
+
+
+        message.reply({
+            embeds: [embed],
+            components: [buttons]
+        });
+
     }
-
-    const items = Object.entries(userInv);
-
-    const embed = new EmbedBuilder()
-        .setTitle("🎒 Inventario")
-        .setDescription(
-            items.map(([item, qty], i) =>
-                `**${i + 1}. ${item}** x${qty}`
-            ).join("\n")
-        );
-
-    const row = new ActionRowBuilder().addComponents(
-        items.slice(0, 5).map(([item]) =>
-            new ButtonBuilder()
-                .setCustomId(`inv_${message.author.id}_${item}`)
-                .setLabel(item)
-                .setStyle(ButtonStyle.Primary)
-        )
-    );
-
-    return message.reply({ embeds: [embed], components: [row] });
-}
 };
