@@ -48,14 +48,16 @@ module.exports = {
             return message.reply(`❌ No tienes las suficientes monedas para comprar ${item.emoji}`);
         }
 
-        // =========================
+         // =========================
         // ✔ COMPRA EXITOSA
         // =========================
-     balances[userId] -= item.price;
-saveBalances();
+        balances[userId] -= item.price;
+        saveBalances();
 
-item.stock -= 1;
+        item.stock -= 1;
 
-addItem(userId, item.emoji, 1);
+        addItem(userId, item.emoji, 1);
 
-return message.reply("✔ Comprado !");
+        return message.reply("✔ Comprado !");
+    }
+};
