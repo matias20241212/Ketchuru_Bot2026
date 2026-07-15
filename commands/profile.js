@@ -1,8 +1,8 @@
 const { EmbedBuilder } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
+const db = require("../database");
 
-const moneyPath = path.join(__dirname, "../data/balance.json");
 const inventoryPath = path.join(__dirname, "../data/inventory.json");
 const messagesPath = path.join(__dirname, "../data/mensajes.json");
 const streaksPath = path.join(__dirname, "../data/streaks.json");
@@ -24,11 +24,9 @@ module.exports = {
 
         try {
 
-            // Usuario mencionado o propio usuario
             const usuario = message.mentions.users.first() || message.author;
 
 
-            // Intentar buscar miembro
             let miembro;
 
             try {
@@ -38,20 +36,40 @@ module.exports = {
             }
 
 
-            // Leer datos
-            const money = leerJSON(moneyPath);
             const inventory = leerJSON(inventoryPath);
             const messages = leerJSON(messagesPath);
             const streaks = leerJSON(streaksPath);
 
 
 
-            // 💰 Balance
-            const balance = money[usuario.id]?.balance || 0;
+            // 💰 Balance desde Neon
+            let result = await db.query(
+                "SELECT balance FROM users WHERE discord_id = $1",
+                [usuario.id]
+            );
+
+
+            if (result.rows.length === 0) {
+
+                await db.query(
+                    "INSERT INTO users (discord_id, balance) VALUES ($1, $2)",
+                    [usuario.id, 50]
+                );
+
+                result = await db.query(
+                    "SELECT balance FROM users WHERE discord_id = $1",
+                    [usuario.id]
+                );
+            }
+
+
+            const balance = Number(result.rows[0].balance);
+
 
 
             // 💬 Mensajes
             const totalMensajes = messages[usuario.id]?.total || 0;
+
 
 
             // 🔥 Racha
@@ -98,19 +116,17 @@ module.exports = {
 
 
 
-            // 🏆 Ranking dinero
+            // 🏆 Ranking desde Neon
             let top = "Sin ranking";
 
 
-            const ranking = Object.entries(money)
-                .sort((a,b) =>
-                    (b[1].balance || 0) -
-                    (a[1].balance || 0)
-                );
+            const ranking = await db.query(
+                "SELECT discord_id, balance FROM users ORDER BY balance DESC"
+            );
 
 
-            const posicion = ranking.findIndex(
-                x => x[0] === usuario.id
+            const posicion = ranking.rows.findIndex(
+                x => x.discord_id === usuario.id
             );
 
 
@@ -120,7 +136,6 @@ module.exports = {
 
 
 
-            // Fechas
             const fechaServidor = miembro?.joinedTimestamp
                 ? `<t:${Math.floor(miembro.joinedTimestamp / 1000)}:d>`
                 : "No está en el servidor";
@@ -132,7 +147,6 @@ module.exports = {
 
 
 
-            // Rol
             let rol = "Usuario";
 
 
@@ -145,7 +159,6 @@ module.exports = {
 
 
 
-            // Embed
             const embed = new EmbedBuilder()
                 .setColor("#ff8800")
                 .setAuthor({

@@ -1,18 +1,16 @@
-const fs = require("fs");
-const path = require("path");
-
+const db = require("../../database");
 
 const ROLES_PERMITIDOS = [
-    "1465524197085155420", // 👑 Owner
-    "1512618062917144708", // 👪 Hermano
-    "1495243561883533342", // ♕ Co Owner
-    "1516897210862931978", // 🎥 Youtuber grande (+1M)
-    "1516896452889153646", // 🎥 Youtuber Mediano
-    "1512179364194947343", // 🎥 Youtuber prometedor
-    "1497041324631658586", // 🛡️ Staff
-    "1465523926431039610", // 🛠️ MOD | Jefatura
-    "1522003060426276905", // 🛠️ MOD | Avanzado
-    "1522002541355732992"  // 🛠️ MOD | Principiante
+    "1465524197085155420",
+    "1512618062917144708",
+    "1495243561883533342",
+    "1516897210862931978",
+    "1516896452889153646",
+    "1512179364194947343",
+    "1497041324631658586",
+    "1465523926431039610",
+    "1522003060426276905",
+    "1522002541355732992"
 ];
 
 
@@ -36,36 +34,27 @@ module.exports = {
         }
 
 
-
         const usuario = message.mentions.users.first();
 
         const cantidad = Number(args[1]);
 
 
-
         if (!usuario || !cantidad || cantidad <= 0) {
-
             return message.reply(
                 "❌ Uso correcto: `!addmoney @usuario cantidad`"
             );
-
         }
-
 
 
         if (usuario.id === message.author.id) {
-
             return message.reply(
                 "❌ No puedes darte dinero a ti mismo."
             );
-
         }
-
 
 
         const miembroObjetivo =
             await message.guild.members.fetch(usuario.id);
-
 
 
         const objetivoTieneRol =
@@ -74,84 +63,54 @@ module.exports = {
             );
 
 
-
         if (objetivoTieneRol) {
-
             return message.reply(
                 "❌ No puedes darle dinero a usuarios con roles administrativos."
             );
-
         }
 
 
 
-        const archivo = path.join(
-            __dirname,
-            "../data/usuarios.json"
+        let result = await db.query(
+            "SELECT balance FROM users WHERE discord_id = $1",
+            [usuario.id]
         );
 
 
+        if (result.rows.length === 0) {
 
-        let usuarios;
-
-
-
-        try {
-
-            usuarios = JSON.parse(
-                fs.readFileSync(archivo, "utf8")
+            await db.query(
+                "INSERT INTO users (discord_id, balance) VALUES ($1, $2)",
+                [usuario.id, 50]
             );
 
 
-        } catch {
-
-            usuarios = {};
-
+            result = await db.query(
+                "SELECT balance FROM users WHERE discord_id = $1",
+                [usuario.id]
+            );
         }
 
 
 
-
-        if (!usuarios[usuario.id]) {
-
-            usuarios[usuario.id] = {
-
-                monedas: 0,
-
-                mensajes: 0,
-
-                inventario: [],
-
-                tragamonedas: {
-
-                    victorias: 0,
-
-                    derrotas: 0
-
-                }
-
-            };
-
-        }
+        let balance = Number(result.rows[0].balance);
 
 
 
-
-        usuarios[usuario.id].monedas += cantidad;
-
+        balance += cantidad;
 
 
-        fs.writeFileSync(
-            archivo,
-            JSON.stringify(usuarios, null, 2)
+
+        await db.query(
+            "UPDATE users SET balance = $1 WHERE discord_id = $2",
+            [balance, usuario.id]
         );
 
 
 
         message.reply(
-`✅ Se añadieron **${cantidad} 💰 monedas** a ${usuario}.`
+            `✅ Se añadieron **${cantidad} 💰 monedas** a ${usuario}.`
         );
-
 
     }
 

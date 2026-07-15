@@ -1,17 +1,6 @@
 const { addItem } = require("../../systems/inventory");
 const { shop } = require("../../systems/shop");
-
-const fs = require("fs");
-const path = require("path");
-
-const balanceFile = path.join(__dirname, "../../data/balance.json");
-let balances = fs.existsSync(balanceFile)
-  ? JSON.parse(fs.readFileSync(balanceFile))
-  : {};
-
-function saveBalances() {
-  fs.writeFileSync(balanceFile, JSON.stringify(balances, null, 2));
-}
+const db = require("../../database");
 
 module.exports = {
     name: "buy",
@@ -32,6 +21,7 @@ module.exports = {
             return message.reply("❌ Este item no existe en la tienda.");
         }
 
+
         // =========================
         // ❌ SIN STOCK
         // =========================
@@ -39,24 +29,57 @@ module.exports = {
             return message.reply("❌ Este poder no tiene Stock");
         }
 
+
         // =========================
-        // ❌ SIN MONEDAS
+        // 💰 BALANCE DESDE NEON
         // =========================
-        const userBalance = balances[userId] || 0;
+
+        let result = await db.query(
+            "SELECT balance FROM users WHERE discord_id = $1",
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+
+            await db.query(
+                "INSERT INTO users (discord_id, balance) VALUES ($1, $2)",
+                [userId, 50]
+            );
+
+            result = await db.query(
+                "SELECT balance FROM users WHERE discord_id = $1",
+                [userId]
+            );
+        }
+
+
+        let userBalance = Number(result.rows[0].balance);
+
 
         if (userBalance < item.price) {
             return message.reply(`❌ No tienes las suficientes monedas para comprar ${item.emoji}`);
         }
 
-         // =========================
+
+
+        // =========================
         // ✔ COMPRA EXITOSA
         // =========================
-        balances[userId] -= item.price;
-        saveBalances();
+
+        userBalance -= item.price;
+
+
+        await db.query(
+            "UPDATE users SET balance = $1 WHERE discord_id = $2",
+            [userBalance, userId]
+        );
+
 
         item.stock -= 1;
 
+
         addItem(userId, item.emoji, 1);
+
 
         return message.reply("✔ Comprado !");
     }

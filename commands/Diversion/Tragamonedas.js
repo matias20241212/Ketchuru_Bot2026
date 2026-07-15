@@ -1,18 +1,10 @@
-const fs = require("fs");
+const db = require("../../database");
 
-const balanceFile = "./data/balance.json";
 const tragamonedasMultiplierFile = "./data/tragamonedasMultiplier.json";
 
-function load() {
-    if (!fs.existsSync(balanceFile)) return {};
-    return JSON.parse(fs.readFileSync(balanceFile));
-}
-
-function save(data) {
-    fs.writeFileSync(balanceFile, JSON.stringify(data, null, 2));
-}
-
 function loadTragamonedasMultiplier() {
+    const fs = require("fs");
+
     if (!fs.existsSync(tragamonedasMultiplierFile)) return 1;
 
     const data = JSON.parse(
@@ -31,8 +23,26 @@ module.exports = {
 
     async execute(message, args) {
 
-        let balances = load();
         const userId = message.author.id;
+
+        let result = await db.query(
+            "SELECT balance FROM users WHERE discord_id = $1",
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            await db.query(
+                "INSERT INTO users (discord_id, balance) VALUES ($1, $2)",
+                [userId, 50]
+            );
+
+            result = await db.query(
+                "SELECT balance FROM users WHERE discord_id = $1",
+                [userId]
+            );
+        }
+
+        let balance = Number(result.rows[0].balance);
 
         const allowedBets = [10, 50, 100, 500, 1000, 2500, 5000, 10000, 50000];
         const bet = parseInt(args[0]);
@@ -41,9 +51,7 @@ module.exports = {
             return message.reply("❌ Apuesta inválida.");
         }
 
-        if (!balances[userId]) balances[userId] = 50;
-
-        if (balances[userId] < bet) {
+        if (balance < bet) {
             return message.reply("❌ No tienes suficientes monedas.");
         }
 
@@ -51,9 +59,7 @@ module.exports = {
 
         let msg = await message.reply("🎰 Girando slot 3x3...");
 
-        // =========================
-        // 🎬 ANIMACIÓN 3x3
-        // =========================
+
         for (let i = 0; i < 5; i++) {
 
             const fake = [
@@ -74,10 +80,6 @@ module.exports = {
             await sleep(350);
         }
 
-
-        // =========================
-        // 🎯 RESULTADO FINAL 3x3
-        // =========================
 
         const grid = [
             Array.from({ length: 3 }, () => emojis[Math.floor(Math.random() * emojis.length)]),
@@ -105,10 +107,6 @@ module.exports = {
         let multiplier = 0;
 
 
-        // =========================
-        // 💎 DIAMANTE
-        // =========================
-
         if (topEmoji === "💎") {
 
             const tabla = {
@@ -123,11 +121,6 @@ module.exports = {
 
             multiplier = tabla[veces] || 0;
         }
-
-
-        // =========================
-        // 🎰 OTROS EMOJIS
-        // =========================
 
         else {
 
@@ -146,10 +139,6 @@ module.exports = {
         }
 
 
-        // =========================
-        // 🎰 MULTIPLICADOR GLOBAL
-        // =========================
-
         const premioMultiplier = loadTragamonedasMultiplier();
 
 
@@ -158,16 +147,18 @@ module.exports = {
             : Math.floor(bet * multiplier * premioMultiplier);
 
 
+        balance += ganancia;
 
-        balances[userId] += ganancia;
 
-
-        if (balances[userId] < 0) {
-            balances[userId] = 0;
+        if (balance < 0) {
+            balance = 0;
         }
 
 
-        save(balances);
+        await db.query(
+            "UPDATE users SET balance = $1 WHERE discord_id = $2",
+            [balance, userId]
+        );
 
 
         await sleep(400);
@@ -183,7 +174,7 @@ module.exports = {
             `⚡ Mult: x${multiplier}\n` +
             `🎰 Bonus tragamonedas: x${premioMultiplier}\n` +
             `💰 Cambio: ${ganancia}\n` +
-            `💳 Balance: ${balances[userId]}`
+            `💳 Balance: ${balance}`
         );
     }
 };
