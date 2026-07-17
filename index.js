@@ -284,10 +284,17 @@ client.on('messageCreate', async (message) => {
     // =========================
     // 💰 DAR 50 MONEDAS SOLO 1 VEZ
     // =========================
-    if (!balances[userId]) {
-        balances[userId] = 50;
-        saveBalances();
-    }
+ let result = await db.query(
+    "SELECT balance FROM users WHERE discord_id = $1",
+    [userId]
+);
+
+if (result.rows.length === 0) {
+    await db.query(
+        "INSERT INTO users (discord_id, balance) VALUES ($1, $2)",
+        [userId, 50]
+    );
+}
 
     // =========================
     // 🔥 SISTEMA DE COMANDOS (!)

@@ -1,77 +1,136 @@
-const fs = require("fs");
-const path = require("path");
-
-const inventoryFile = path.join(__dirname, "../data/inventory.json");
-
-function loadInventory() {
-    if (!fs.existsSync(inventoryFile)) {
-        fs.writeFileSync(inventoryFile, "{}");
-    }
-
-    return JSON.parse(
-        fs.readFileSync(inventoryFile)
-    );
-}
-
-function saveInventory(data) {
-    fs.writeFileSync(
-        inventoryFile,
-        JSON.stringify(data, null, 2)
-    );
-}
+const db = require("../database");
 
 
 // Añadir objeto
-function addItem(userId, item, amount = 1) {
+async function addItem(userId, item, amount = 1) {
 
-    const inventories = loadInventory();
+    const result = await db.query(
+        `
+        SELECT amount 
+        FROM inventory
+        WHERE discord_id = $1
+        AND item = $2
+        `,
+        [userId, item]
+    );
 
-    if (!inventories[userId]) {
-        inventories[userId] = {};
+
+    if (result.rows.length === 0) {
+
+        await db.query(
+            `
+            INSERT INTO inventory
+            (discord_id, item, amount)
+            VALUES ($1,$2,$3)
+            `,
+            [
+                userId,
+                item,
+                amount
+            ]
+        );
+
+    } else {
+
+        await db.query(
+            `
+            UPDATE inventory
+            SET amount = amount + $1
+            WHERE discord_id = $2
+            AND item = $3
+            `,
+            [
+                amount,
+                userId,
+                item
+            ]
+        );
     }
-
-    if (!inventories[userId][item]) {
-        inventories[userId][item] = 0;
-    }
-
-    inventories[userId][item] += amount;
-
-    saveInventory(inventories);
 }
 
 
+
 // Quitar objeto
-function removeItem(userId, item, amount = 1) {
-
-    const inventories = loadInventory();
-
-    if (!inventories[userId]) return false;
-
-    if (!inventories[userId][item]) return false;
+async function removeItem(userId, item, amount = 1) {
 
 
-    inventories[userId][item] -= amount;
+    const result = await db.query(
+        `
+        SELECT amount
+        FROM inventory
+        WHERE discord_id = $1
+        AND item = $2
+        `,
+        [
+            userId,
+            item
+        ]
+    );
 
 
-    if (inventories[userId][item] <= 0) {
-        delete inventories[userId][item];
+    if (result.rows.length === 0) {
+        return false;
     }
 
 
-    saveInventory(inventories);
+    let total = result.rows[0].amount - amount;
+
+
+    if (total <= 0) {
+
+        await db.query(
+            `
+            DELETE FROM inventory
+            WHERE discord_id=$1
+            AND item=$2
+            `,
+            [
+                userId,
+                item
+            ]
+        );
+
+    } else {
+
+        await db.query(
+            `
+            UPDATE inventory
+            SET amount=$1
+            WHERE discord_id=$2
+            AND item=$3
+            `,
+            [
+                total,
+                userId,
+                item
+            ]
+        );
+    }
+
 
     return true;
 }
 
 
+
 // Obtener inventario
-function getInventory(userId) {
+async function getInventory(userId) {
 
-    const inventories = loadInventory();
+    const result = await db.query(
+        `
+        SELECT item, amount
+        FROM inventory
+        WHERE discord_id=$1
+        `,
+        [
+            userId
+        ]
+    );
 
-    return inventories[userId] || {};
 
+    return result.rows;
 }
+
 
 
 module.exports = {
