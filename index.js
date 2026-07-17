@@ -32,43 +32,6 @@ const client = new Client({
 // Cargar comandos desde la carpeta comandos/
 require("./handlers/comandos")(client);
 
-
-// Sistema de comandos con !
-client.on("messageCreate", async (message) => {
-
-    if (message.author.bot) return;
-
-    if (!message.content.startsWith("!")) return;
-
-
-    const args = message.content
-        .slice(1)
-        .trim()
-        .split(/ +/);
-
-    const nombre = args.shift().toLowerCase();
-
-
-    const comando = client.commands.get(nombre);
-
-
-    if (!comando) return;
-
-
-    try {
-
-        await comando.execute(message, args);
-
-    } catch (error) {
-
-        console.error(error);
-
-        message.reply("❌ Hubo un error ejecutando el comando.");
-
-    }
-
-});
-
 // =========================
 // 🎒 INVENTARIO (PRO)
 // =========================
