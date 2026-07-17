@@ -1,4 +1,4 @@
-const db = require("../../database");
+const db = require("../database");
 
 const ROLES_PERMITIDOS = [
     "1465524197085155420",
