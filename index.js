@@ -1,4 +1,5 @@
 const express = require("express");
+const db = require("./database");
 const app = express();
 
 const cron = require("node-cron");
@@ -56,7 +57,7 @@ client.on("messageCreate", async (message) => {
 
     try {
 
-        await comando.ejecutar(message, args);
+        await comando.execute(message, args);
 
     } catch (error) {
 
