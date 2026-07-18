@@ -116,7 +116,7 @@ module.exports = {
 
 
 
-            // 🏆 Ranking desde Neon
+            // 🏆 Ranking
             let top = "Sin ranking";
 
 
@@ -151,10 +151,12 @@ module.exports = {
 
 
             if (miembro) {
+
                 rol =
-                miembro.roles.highest.id === message.guild.id
-                ? "Usuario"
-                : miembro.roles.highest.name;
+                    miembro.roles.highest.id === message.guild.id
+                    ? "Usuario"
+                    : miembro.roles.highest.name;
+
             }
 
 
@@ -166,6 +168,7 @@ module.exports = {
                     iconURL: usuario.displayAvatarURL()
                 })
                 .setThumbnail(usuario.displayAvatarURL())
+                .setImage("https://ketchurubot.onrender.com/images/profile-baner.png")
                 .setDescription(
 `• 💰 Balance: $${balance.toLocaleString()}
 • 🏆 Top dinero: ${top}
@@ -181,9 +184,11 @@ module.exports = {
                 });
 
 
+
             message.reply({
                 embeds: [embed]
             });
+
 
 
         } catch (error) {

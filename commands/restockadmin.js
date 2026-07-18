@@ -16,9 +16,9 @@ const ROLES_PERMITIDOS = [
 
 module.exports = {
 
-    nombre: "restock",
+    name: "restock",
 
-    async ejecutar(message) {
+    async execute(message, args) {
 
 
         const tienePermiso = message.member.roles.cache.some(
@@ -34,7 +34,6 @@ module.exports = {
 
 
 
-        // Generar nuevo stock
         restockShop();
 
 
@@ -47,8 +46,8 @@ module.exports = {
         );
 
 
-        const texto =
 
+        const texto =
 `<@&1523402217556672672>
 
 🛒 **KETCHURU SHOP SE HA RESTOCKEADO!**
