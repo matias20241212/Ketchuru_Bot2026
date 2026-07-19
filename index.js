@@ -217,9 +217,9 @@ client.once("ready", () => {
             const args = message.content.slice(1).trim().split(/ +/);
             const commandName = args.shift().toLowerCase();
 
-            const command = client.commands.get(commandName);
+            const command = client.comandos.get(commandName);
             if (command) {
-                return command.execute(message, args);
+                return command.ejecutar(message, args);
             }
         }
 
