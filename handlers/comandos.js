@@ -3,7 +3,7 @@ const path = require("path");
 
 module.exports = (client) => {
 
-    client.comandos = new Map();
+    client.commands = new Map();
 
     const carpeta = path.join(__dirname, "../commands");
 
@@ -29,12 +29,10 @@ module.exports = (client) => {
         }
 
 
-        client.comandos.set(
+        // Guardar comando completo
+        client.commands.set(
             nombre,
-            {
-                nombre,
-                ejecutar
-            }
+            comando
         );
 
 
