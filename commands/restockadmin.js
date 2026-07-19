@@ -19,6 +19,7 @@ module.exports = {
     name: "restock",
 
     async execute(message, args) {
+        console.log("RESTOCK EJECUTADO");
 
 
         const tienePermiso = message.member.roles.cache.some(
