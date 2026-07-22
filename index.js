@@ -53,32 +53,6 @@ function saveInventory() {
 }
 
 // =========================
-// CARGA DE COMANDOS
-// =========================
-client.commands = new Map();
-
-const foldersPath = path.join(__dirname, "commands");
-const commandFolders = fs.readdirSync(foldersPath);
-
-for (const folder of commandFolders) {
-
-    const commandsPath = path.join(foldersPath, folder);
-
-    // Ignora archivos y solo entra a carpetas
-    if (!fs.statSync(commandsPath).isDirectory()) continue;
-
-    const commandFiles = fs.readdirSync(commandsPath)
-        .filter(file => file.endsWith(".js"));
-
-    for (const file of commandFiles) {
-
-        const filePath = path.join(commandsPath, file);
-        const command = require(filePath);
-
-        client.commands.set(command.name, command);
-    }
-}
-// =========================
 // DEBUG
 // =========================
 client.on('debug', console.log);
@@ -212,17 +186,18 @@ client.once("ready", () => {
         // =========================
         // 🔥 SISTEMA DE COMANDOS (!)
         // =========================
-        if (message.content.startsWith("!")) {
+ if (message.content.startsWith("!")) {
 
-            const args = message.content.slice(1).trim().split(/ +/);
-            const commandName = args.shift().toLowerCase();
+    const args = message.content.slice(1).trim().split(/ +/);
+    const commandName = args.shift().toLowerCase();
 
-            const command = client.comandos.get(commandName);
-            if (command) {
-                return command.ejecutar(message, args);
-            }
-        }
+    const command = client.commands.get(commandName);
 
+    if (command) {
+        return (command.ejecutar || command.execute)(message, args);
+    }
+
+}
         // =========================
         // TU SISTEMA ACTUAL
         // =========================
