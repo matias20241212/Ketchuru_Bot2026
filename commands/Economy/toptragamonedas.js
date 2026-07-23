@@ -56,36 +56,14 @@ module.exports = {
         for(const user of result.rows){
 
 
-            let nombre = "Usuario desconocido";
-
-
-            try{
-
-                const miembro =
-                await message.guild.members.fetch(
-                    user.discord_id
-                );
-
-
-                nombre =
-                miembro.user.username;
-
-
-            }catch{}
-
-
-
-
             texto +=
 
 `
-${puesto}. 👤 **${nombre}**
+${puesto}. 👤 <@${user.discord_id}>
 💰 ${Number(user.balance).toLocaleString()} monedas
 🎰 ${user.partidas} partidas
 
 `;
-
-
 
             puesto++;
 
