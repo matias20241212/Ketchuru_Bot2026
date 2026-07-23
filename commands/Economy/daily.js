@@ -46,12 +46,15 @@ module.exports = {
         await db.query(
             `
             INSERT INTO users
-            (discord_id,balance)
+            (
+                discord_id,
+                balance
+            )
 
             VALUES
             ($1,$2)
 
-            ON CONFLICT (discord_id)
+            ON CONFLICT(discord_id)
             DO NOTHING
             `,
             [
@@ -63,19 +66,20 @@ module.exports = {
 
 
 
-        // Crear datos daily si no existe
 
+        // Crear datos daily si no existe
         await db.query(
             `
             INSERT INTO daily_stats
             (
                 discord_id,
                 streak,
+                last_claim,
                 active_today
             )
 
             VALUES
-            ($1,0,false)
+            ($1,0,NULL,false)
 
             ON CONFLICT(discord_id)
             DO NOTHING
@@ -84,6 +88,8 @@ module.exports = {
                 userId
             ]
         );
+
+
 
 
 
@@ -115,46 +121,59 @@ module.exports = {
 
 
         let streak =
-        daily.streak;
+        daily.streak || 0;
 
 
 
-        if(daily.last_daily){
+
+
+        // Revisar tiempo desde último daily
+
+        if(daily.last_claim){
 
 
             const ultima =
-            new Date(daily.last_daily);
+            new Date(daily.last_claim);
 
 
 
             const horas =
             (ahora - ultima)
             /
-            (1000*60*60);
+            (1000 * 60 * 60);
 
 
 
-            // Todavía no puede reclamar
+
+            // Todavía tiene cooldown
 
             if(horas < 24){
 
+                const faltan =
+                Math.ceil(24 - horas);
+
+
                 return message.reply(
-`⏳ Ya reclamaste tu daily.
+`
+⏳ **Ya reclamaste tu Daily**
 
 🔥 Racha actual:
-${streak} días`
+**${streak} días**
+
+⌛ Próximo Daily en:
+**${faltan} horas**
+`
                 );
 
             }
 
 
 
-            // Pasaron 48 horas sin actividad
 
-            if(
-                horas >= 48 &&
-                !daily.active_today
-            ){
+
+            // Perdió la racha por no volver
+
+            if(horas >= 48){
 
                 streak = 0;
 
@@ -166,9 +185,11 @@ ${streak} días`
 
 
 
-        // Nueva racha
+
+        // Aumentar racha
 
         streak++;
+
 
 
 
@@ -180,7 +201,8 @@ ${streak} días`
 
 
 
-        // Dar monedas
+
+        // Dar monedas al balance
 
         await db.query(
             `
@@ -199,7 +221,10 @@ ${streak} días`
 
 
 
-        // Guardar daily
+
+
+
+        // Guardar datos del daily
 
         await db.query(
             `
@@ -207,7 +232,7 @@ ${streak} días`
 
             SET
             streak=$1,
-            last_daily=NOW(),
+            last_claim=NOW(),
             active_today=false
 
             WHERE discord_id=$2
@@ -217,6 +242,8 @@ ${streak} días`
                 userId
             ]
         );
+
+
 
 
 
@@ -232,9 +259,13 @@ ${streak} días`
 💰 Recompensa:
 **${recompensa.toLocaleString()} monedas**
 
-💡 Recuerda hablar en el servidor para mantener tu racha.
+📅 Próximo Daily:
+En 24 horas
+
+💡 Mantén tu actividad para no perder la racha.
 `
         );
+
 
 
     }
