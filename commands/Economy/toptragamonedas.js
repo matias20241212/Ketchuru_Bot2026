@@ -19,9 +19,7 @@ module.exports = {
 
             u.balance,
 
-            t.partidas,
-
-            t.mayor_premio
+            t.partidas
 
             FROM users u
 
@@ -58,12 +56,10 @@ module.exports = {
         for(const user of result.rows){
 
 
-            let nombre =
-            "Usuario desconocido";
+            let nombre = "Usuario desconocido";
 
 
             try{
-
 
                 const miembro =
                 await message.guild.members.fetch(
@@ -83,16 +79,9 @@ module.exports = {
             texto +=
 
 `
-**${puesto}.** 👤 ${nombre}
-
-💰 Balance:
-**${Number(user.balance).toLocaleString()}**
-
-🎰 Partidas jugadas:
-**${user.partidas}**
-
-💎 Mayor premio:
-**${Number(user.mayor_premio).toLocaleString()}**
+${puesto}. 👤 **${nombre}**
+💰 ${Number(user.balance).toLocaleString()} monedas
+🎰 ${user.partidas} partidas
 
 `;
 
@@ -101,7 +90,6 @@ module.exports = {
             puesto++;
 
         }
-
 
 
 
@@ -121,7 +109,7 @@ module.exports = {
         .setFooter({
 
             text:
-            "Ranking conectado a Neon Database"
+            "🎰 Ranking conectado a Neon Database"
 
         });
 
@@ -134,7 +122,6 @@ module.exports = {
             ]
 
         });
-
 
 
     }
