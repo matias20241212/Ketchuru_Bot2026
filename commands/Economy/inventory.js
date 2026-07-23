@@ -2,8 +2,11 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
+const db = require("../../database");
+
 const {
-    getInventory
+    getInventory,
+    removeItem
 } = require("../../systems/inventory");
 
 const {
@@ -14,29 +17,53 @@ const {
     createInventoryButtons
 } = require("../../systems/inventoryMenu");
 
+function getDuration(effect){
+
+    if(!effect) return null;
+
+
+    const match =
+    effect.match(/(\d+)\s*min/);
+
+
+    if(!match) return null;
+
+
+    const minutes =
+    Number(match[1]);
+
+
+    return minutes;
+
+}
 
 module.exports = {
 
     name: "inventory",
 
+
     async execute(message, args) {
+
 
         const owner = message.author;
 
         let target = owner;
 
 
+
         // =========================
         // 👤 VER INVENTARIO DE OTRO
         // =========================
 
-        if (args[0]) {
+        if(args[0]){
+
 
             const user =
-                message.mentions.users.first();
+            message.mentions.users.first();
 
 
-            if (!user) {
+
+            if(!user){
 
                 return message.reply(
                     "❌ Usuario inválido."
@@ -45,16 +72,19 @@ module.exports = {
             }
 
 
+
             target = user;
 
         }
 
 
 
+
+
         const items =
-            await getInventory(
-                target.id
-            );
+        await getInventory(
+            target.id
+        );
 
 
 
@@ -63,25 +93,29 @@ module.exports = {
         const perPage = 10;
 
 
+
         const totalPages =
-            Math.max(
-                1,
-                Math.ceil(
-                    items.length / perPage
-                )
-            );
+        Math.max(
+            1,
+            Math.ceil(
+                items.length / perPage
+            )
+        );
 
 
 
-        function createEmbed() {
+
+
+        function createEmbed(){
 
 
             const current =
-                paginate(
-                    items,
-                    page,
-                    perPage
-                );
+            paginate(
+                items,
+                page,
+                perPage
+            );
+
 
 
             return new EmbedBuilder()
@@ -90,6 +124,7 @@ module.exports = {
                 `🎒 Inventario de ${target.username}`
             )
 
+
             .setDescription(
 
                 current.length
@@ -97,14 +132,16 @@ module.exports = {
                 ?
 
                 current.map(item =>
-                    `${item.item} x${item.amount}`
+                `${item.emoji || "📦"} ${item.item} x${item.amount}`
                 ).join("\n")
+
 
                 :
 
                 "📦 Inventario vacío"
 
             )
+
 
             .setFooter({
 
@@ -113,48 +150,59 @@ module.exports = {
 
             });
 
+
         }
 
 
 
 
+
+
+
         const msg =
-            await message.reply({
+        await message.reply({
 
-                embeds:[
-                    createEmbed()
-                ],
+            embeds:[
+                createEmbed()
+            ],
 
-                components:
 
-                createInventoryButtons(
+            components:
 
-                    paginate(
-                        items,
-                        page,
-                        perPage
-                    ),
+            createInventoryButtons(
 
+                paginate(
+                    items,
                     page,
+                    perPage
+                ),
 
-                    totalPages,
+                page,
 
-                    owner.id
+                totalPages,
 
-                )
+                owner.id
 
-            });
+            )
+
+        });
+
+
+
+
 
 
 
 
 
         const collector =
-            msg.createMessageComponentCollector({
+        msg.createMessageComponentCollector({
 
-                time: 300000
+            time:300000
 
-            });
+        });
+
+
 
 
 
@@ -167,13 +215,13 @@ module.exports = {
 
 
                 // =========================
-                // 🔒 SOLO EL DUEÑO
+                // 🔒 SOLO DUEÑO
                 // =========================
 
-                if (
-                    interaction.user.id
-                    !== owner.id
-                ) {
+
+                if(
+                    interaction.user.id !== owner.id
+                ){
 
                     return interaction.reply({
 
@@ -190,12 +238,17 @@ module.exports = {
 
 
 
+
+
+                // =========================
                 // 🚪 SALIR
+                // =========================
+
 
                 if(
-                    interaction.customId
-                    .startsWith("inv_exit")
+                    interaction.customId.startsWith("inv_exit")
                 ){
+
 
                     await interaction.update({
 
@@ -219,11 +272,17 @@ module.exports = {
 
 
 
+
+
+
+
+                // =========================
                 // ▶ SIGUIENTE
+                // =========================
+
 
                 if(
-                    interaction.customId
-                    .startsWith("inv_next")
+                    interaction.customId.startsWith("inv_next")
                 ){
 
 
@@ -234,11 +293,13 @@ module.exports = {
                     }
 
 
+
                     return interaction.update({
 
                         embeds:[
                             createEmbed()
                         ],
+
 
                         components:
 
@@ -260,17 +321,24 @@ module.exports = {
 
                     });
 
+
                 }
 
 
 
 
 
+
+
+
+
+                // =========================
                 // ◀ ANTERIOR
+                // =========================
+
 
                 if(
-                    interaction.customId
-                    .startsWith("inv_back")
+                    interaction.customId.startsWith("inv_back")
                 ){
 
 
@@ -281,11 +349,13 @@ module.exports = {
                     }
 
 
+
                     return interaction.update({
 
                         embeds:[
                             createEmbed()
                         ],
+
 
                         components:
 
@@ -307,24 +377,128 @@ module.exports = {
 
                     });
 
+
                 }
 
 
 
 
 
-                // OBJETOS
+
+
+
+
+                // =========================
+                // ⚡ ACTIVAR PODER
+                // =========================
+
 
                 if(
-                    interaction.customId
-                    .startsWith("inv_item")
+                    interaction.customId.startsWith("inv_item")
                 ){
+
+
+
+                    const data =
+                    interaction.customId.split("_");
+
+
+
+                    const index =
+                    Number(data[3]);
+
+
+
+                    const current =
+                    paginate(
+                        items,
+                        page,
+                        perPage
+                    );
+
+
+
+                    const objeto =
+                    current[index];
+
+
+
+                    if(!objeto){
+
+
+                        return interaction.reply({
+
+                            content:
+                            "❌ No se encontró el objeto.",
+
+                            ephemeral:true
+
+                        });
+
+                    }
+
+const minutes =
+getDuration(objeto.effect);
+
+
+
+const expires =
+minutes
+?
+new Date(Date.now() + minutes * 60000)
+:
+null;
+
+
+
+
+await db.query(
+
+`
+INSERT INTO active_history
+(
+    discord_id,
+    emoji,
+    item,
+    effect,
+    activated_at,
+    expires_at
+)
+
+VALUES
+($1,$2,$3,$4,NOW(),$5)
+`,
+
+[
+    interaction.user.id,
+    objeto.emoji,
+    objeto.item,
+    objeto.effect,
+    expires
+]
+
+);
+
 
 
                     return interaction.reply({
 
                         content:
-                        "🔎 Detalles del objeto próximamente.",
+
+`
+⚡ **PODER ACTIVADO**
+
+${objeto.emoji || "📦"} **${objeto.item}**
+
+✨ Efecto:
+${objeto.effect || "Sin efecto"}
+
+⏳ Duración:
+${minutes ? minutes + " minutos" : "Permanente"}
+
+📅 Activado:
+Ahora
+`,
 
                         ephemeral:true
 
@@ -334,16 +508,24 @@ module.exports = {
                 }
 
 
+
+
             }
+
         );
 
 
 
 
 
+
+
+
+
         // =========================
-        // ⏳ CERRAR A LOS 5 MINUTOS
+        // ⏳ EXPIRAR MENÚ
         // =========================
+
 
         collector.on(
             "end",
@@ -351,6 +533,7 @@ module.exports = {
 
 
                 try{
+
 
                     await msg.edit({
 
@@ -364,8 +547,12 @@ module.exports = {
 
                 }catch{}
 
+
+
             }
         );
+
+
 
 
     }
