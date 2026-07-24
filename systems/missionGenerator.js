@@ -347,32 +347,28 @@ crearRecompensa();
 
 
 
-
 const insert =
 await db.query(
 `
 SELECT id
 FROM missions
-
+WHERE type=$1
 ORDER BY RANDOM()
-
 LIMIT 1
-`
+`,
+[
+mision.type
+]
 );
 
 
-
-
-
+if(insert.rows.length === 0){
+    continue;
+}
 
 
 const missionId =
 insert.rows[0].id;
-
-
-
-
-
 
 
 await db.query(
