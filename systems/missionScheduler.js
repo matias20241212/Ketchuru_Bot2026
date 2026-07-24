@@ -1,3 +1,4 @@
+const { DateTime } = require("luxon");
 const { generarMisionesGlobales } = require("./missionGenerator");
 
 
@@ -6,37 +7,70 @@ function iniciarMissionScheduler(client){
 
     setInterval(async () => {
 
-        const ahora = new Date();
+
+        const ahora = DateTime.now()
+            .setZone("America/Santiago");
 
 
-        const hora = ahora.getHours();
-        const minutos = ahora.getMinutes();
+        const dia = ahora.weekday; // 1 lunes - 7 domingo
+        const hora = ahora.hour;
+        const minutos = ahora.minute;
 
 
 
-        // 🕓 Activar misiones a las 16:00
-        if(hora === 16 && minutos === 0){
+        // Horarios de activación
+        const horarios = [
+
+            // Lunes a jueves 16:00
+            {dias:[1,2,3,4], hora:16},
 
 
-            console.log("🎯 Evento de misiones activado");
+            // Viernes y domingo
+            {dias:[5,7], hora:4},
+            {dias:[5,7], hora:16},
 
 
-            try {
+            // Sábado
+            {dias:[6], hora:4},
+            {dias:[6], hora:12},
+            {dias:[6], hora:16},
+            {dias:[6], hora:0}
 
-                await generarMisionesGlobales();
+        ];
 
 
-                console.log("✅ Misiones generadas correctamente");
+
+        const activar = horarios.some(h =>
+            h.dias.includes(dia) &&
+            h.hora === hora &&
+            minutos === 0
+        );
 
 
-            } catch(error){
 
-                console.error(
-                    "❌ Error generando misiones:",
-                    error
-                );
+        if(!activar) return;
 
-            }
+
+
+        console.log("🎯 Evento de misiones activado");
+
+
+        try {
+
+
+            await generarMisionesGlobales();
+
+
+            console.log("✅ Misiones generadas correctamente");
+
+
+        } catch(error){
+
+
+            console.error(
+                "❌ Error generando misiones:",
+                error
+            );
 
 
         }
