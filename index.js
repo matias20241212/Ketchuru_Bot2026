@@ -161,6 +161,47 @@ client.once("ready", () => {
     const statsServidor = new Map();
 
     client.on('messageCreate', async (message) => {
+        if(message.author.bot) return;
+        const { avanzarMision } = require("./systems/missionProgress");
+
+
+const misionMensaje =
+await avanzarMision(
+    message.author.id,
+    "messages"
+);
+
+
+
+if(misionMensaje){
+
+
+message.reply(
+`
+🎉 **MISIÓN COMPLETADA**
+
+💬 ${misionMensaje.nombre}
+
+💰 Recompensa:
++${misionMensaje.recompensa} monedas
+`
+);
+
+
+}
+
+await db.query(
+`
+UPDATE daily_stats
+
+SET active_today=true
+
+WHERE discord_id=$1
+`,
+[
+message.author.id
+]
+);
 
         if (message.author.bot) return;
         if (!message.guild) return;
