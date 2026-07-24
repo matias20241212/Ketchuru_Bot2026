@@ -4,256 +4,407 @@ const { avanzarMision } = require("../../systems/missionProgress");
 const db = require("../../database");
 
 
+
 module.exports = {
 
-    name: "buy",
 
+name:"buy",
 
-    async execute(message, args) {
 
 
-        const userId = message.author.id;
+async execute(message,args){
 
 
-        if (!args[0]) {
 
-            return message.reply(
-                "❌ Debes especificar un item. Ej: !buy 🍎"
-            );
+const userId =
+message.author.id;
 
-        }
 
 
+if(!args[0]){
 
-        const emoji = args[0];
 
+return message.reply(
+"❌ Ejemplo: !buy 🍎"
+);
 
 
-        // =========================
-        // 🛒 OBTENER TIENDA ACTUAL
-        // =========================
+}
 
-        const currentShop = getShop();
 
 
 
-        const item = currentShop.find(
-            i => i.emoji === emoji
-        );
+const emoji = args[0];
 
 
 
-        if (!item) {
+const usarCupon =
+args[1] === "coupon";
 
-            return message.reply(
-                "❌ Este item no está actualmente en la tienda."
-            );
 
-        }
 
 
 
+// =========================
+// 🛒 TIENDA ACTUAL
+// =========================
 
-        // =========================
-        // ❌ COMPROBAR STOCK
-        // =========================
 
-        if (item.stock <= 0) {
+const currentShop =
+getShop();
 
-            return message.reply(
-                `❌ ${emoji} no tiene stock actualmente.\n🛒 Espera al próximo restock.`
-            );
 
-        }
 
+const item =
+currentShop.find(
+i=>i.emoji===emoji
+);
 
 
 
-        // =========================
-        // 💰 OBTENER BALANCE NEON
-        // =========================
 
-        let result = await db.query(
-            `
-            SELECT balance
-            FROM users
-            WHERE discord_id=$1
-            `,
-            [
-                userId
-            ]
-        );
+if(!item){
 
 
+return message.reply(
+"❌ Este objeto no está actualmente en la tienda."
+);
 
-        if (result.rows.length === 0) {
 
+}
 
-            await db.query(
-                `
-                INSERT INTO users
-                (
-                    discord_id,
-                    balance
-                )
 
-                VALUES
-                ($1,$2)
-                `,
-                [
-                    userId,
-                    50
-                ]
-            );
 
 
+// =========================
+// 📦 STOCK
+// =========================
 
-            result = await db.query(
-                `
-                SELECT balance
-                FROM users
-                WHERE discord_id=$1
-                `,
-                [
-                    userId
-                ]
-            );
 
+if(item.stock<=0){
 
-        }
 
+return message.reply(
+`
+❌ Sin stock
 
+${item.emoji} no está disponible.
 
-        let balance =
-        Number(result.rows[0].balance);
+🛒 Espera el próximo restock.
+`
+);
 
 
+}
 
 
-        // =========================
-        // ❌ SIN DINERO
-        // =========================
 
-        if (balance < item.price) {
 
-            return message.reply(
-                `❌ No tienes suficientes monedas.\nNecesitas: ${item.price}🪙`
-            );
 
-        }
+// =========================
+// 💰 BALANCE
+// =========================
 
 
+let result =
+await db.query(
+`
+SELECT balance
+FROM users
+WHERE discord_id=$1
+`,
+[userId]
+);
 
 
 
-        // =========================
-        // ✔ COMPRA
-        // =========================
 
+if(result.rows.length===0){
 
-        balance -= item.price;
 
+await db.query(
+`
+INSERT INTO users
+(discord_id,balance)
 
+VALUES
+($1,$2)
+`,
+[
+userId,
+50
+]
+);
 
-        // quitar stock
 
-        item.stock -= 1;
 
+result =
+await db.query(
+`
+SELECT balance
+FROM users
+WHERE discord_id=$1
+`,
+[userId]
+);
 
 
-        // añadir inventario
+}
 
-        addItem(
-            userId,
-            item.emoji,
-            1
-        );
 
 
 
 
-        // =========================
-        // 🎯 AVANZAR MISIÓN BUY
-        // =========================
+let balance =
+Number(result.rows[0].balance);
 
 
-        const mision = await avanzarMision(
-            userId,
-            "buy"
-        );
 
 
 
-        let mensajeMision = "";
+// =========================
+// 🎟️ CUPÓN
+// =========================
 
 
+let descuento = 0;
 
-        if (mision) {
 
 
-            mensajeMision =
+if(usarCupon){
+
+
+
+const cupon =
+await db.query(
+`
+SELECT id,discount
+
+FROM user_coupons
+
+WHERE discord_id=$1
+
+LIMIT 1
+`,
+[
+userId
+]
+);
+
+
+
+
+
+if(cupon.rows.length===0){
+
+
+return message.reply(
+"❌ No tienes cupones disponibles."
+);
+
+
+}
+
+
+
+
+
+descuento =
+cupon.rows[0].discount;
+
+
+
+
+
+await db.query(
+`
+DELETE FROM user_coupons
+
+WHERE id=$1
+`,
+[
+cupon.rows[0].id
+]
+);
+
+
+
+
+
+}
+
+
+
+
+
+// =========================
+// 💸 PRECIO FINAL
+// =========================
+
+
+let precioFinal =
+item.price;
+
+
+
+
+if(descuento>0){
+
+
+precioFinal =
+Math.floor(
+item.price -
+(item.price*(descuento/100))
+);
+
+
+}
+
+
+
+
+
+if(balance < precioFinal){
+
+
+return message.reply(
+`
+❌ No tienes suficientes monedas.
+
+Necesitas:
+${precioFinal}🪙
+`
+);
+
+
+}
+
+
+
+
+
+// =========================
+// 🛒 COMPRA
+// =========================
+
+
+balance -= precioFinal;
+
+
+
+item.stock -=1;
+
+
+
+addItem(
+userId,
+item.emoji,
+1
+);
+
+
+
+
+
+// =========================
+// 🎯 MISIÓN BUY
+// =========================
+
+
+const mision =
+await avanzarMision(
+userId,
+"buy"
+);
+
+
+
+let mensajeMision="";
+
+
+
+if(mision){
+
+
+mensajeMision =
 `
 🎉 **MISIÓN COMPLETADA**
 
 🛒 ${mision.nombre}
 
-💰 Recompensa:
-+${mision.recompensa} monedas
+🎁 ${mision.recompensaTexto}
 `;
 
-        }
+}
 
 
 
 
 
-        // =========================
-        // 💾 GUARDAR BALANCE
-        // =========================
-
-        await db.query(
-            `
-            UPDATE users
-
-            SET balance=$1
-
-            WHERE discord_id=$2
-            `,
-            [
-                balance,
-                userId
-            ]
-        );
+// =========================
+// 💾 GUARDAR
+// =========================
 
 
+await db.query(
+`
+UPDATE users
+
+SET balance=$1
+
+WHERE discord_id=$2
+`,
+[
+balance,
+userId
+]
+);
 
 
 
-        // =========================
-        // 📩 RESPUESTA
-        // =========================
 
-        return message.reply(
+
+
+
+return message.reply(
 `
 ✅ **Compra realizada**
 
-🎁 Item:
+🎁 Objeto:
 ${item.emoji}
 
-💰 Precio:
+💰 Precio original:
 ${item.price}🪙
+
+
+${descuento>0
+?
+`🎟️ Descuento aplicado:
+-${descuento}%`
+:""
+}
+
+
+💸 Precio pagado:
+${precioFinal}🪙
+
 
 📦 Stock restante:
 ${item.stock}
 
+
 💳 Balance:
 ${balance}🪙
 
+
 ${mensajeMision}
+
 `
-        );
+);
 
 
-    }
+
+}
+
 
 };

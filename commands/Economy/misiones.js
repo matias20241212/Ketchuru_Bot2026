@@ -1,5 +1,5 @@
 const db = require("../../database");
-const { generarMisionesUsuario } = require("../../systems/missionGenerator");
+const { generarMisiones } = require("../../systems/missionGenerator");
 
 
 module.exports = {
@@ -8,6 +8,7 @@ name:"misiones",
 
 
 async execute(message){
+    await generarMisiones(userId);
 
 
 const userId = message.author.id;
