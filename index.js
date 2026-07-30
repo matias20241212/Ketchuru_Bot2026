@@ -235,7 +235,8 @@ message.author.id
     const command = client.commands.get(commandName);
 
     if (command) {
-        return (command.ejecutar || command.execute)(message, args);
+        console.log("DB EN INDEX:", db);
+        return (command.ejecutar || command.execute)(message, args, db);
     }
 
 }
