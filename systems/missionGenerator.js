@@ -1,434 +1,249 @@
 const db = require("../database");
 
 
-// =========================
-// 🎁 OBJETOS RECOMPENSA
-// =========================
+// =========================================
+// 🎯 TIPOS DE MISIONES DISPONIBLES
+// =========================================
 
-const objetos = [
-
-
-{
-emoji:"🍎",
-rarity:"Common"
-},
-
-{
-emoji:"🍒",
-rarity:"Uncommon"
-},
-
-{
-emoji:"🍊",
-rarity:"Rare"
-},
-
-{
-emoji:"🔥",
-rarity:"Epic"
-},
-
-{
-emoji:"🚀",
-rarity:"Legendary"
-},
-
-{
-emoji:"🍰",
-rarity:"Mythic"
-},
-
-
-{
-emoji:"💀",
-rarity:"Secret Bad"
-},
-
-
-// SECRET MEDIUM
-
-{
-emoji:"🌪️",
-rarity:"Secret Medium"
-},
-
-{
-emoji:"🧊",
-rarity:"Secret Medium"
-},
-
-{
-emoji:"🌑",
-rarity:"Secret Medium"
-},
-
-{
-emoji:"🌫️",
-rarity:"Secret Medium"
-},
-
-{
-emoji:"🪐",
-rarity:"Secret Medium"
-},
-
-{
-emoji:"🌘",
-rarity:"Secret Medium"
-},
-
-{
-emoji:"🧬",
-rarity:"Secret Medium"
-},
-
-{
-emoji:"🛸",
-rarity:"Secret Medium"
-},
-
-{
-emoji:"🌋",
-rarity:"Secret Medium"
-},
-
-{
-emoji:"🌀",
-rarity:"Secret Medium"
-}
-
-
+const tiposPermitidos = [
+    "slots",
+    "buy",
+    "messages"
 ];
 
 
+// =========================================
+// 🎲 OBTENER UNA MISION ALEATORIA DESDE SQL
+// =========================================
+
+async function obtenerMisionAleatoria(misionesExistentes = []) {
+
+    let query = `
+        SELECT
+            id,
+            type,
+            name,
+            description,
+            goal,
+            reward,
+            difficulty,
+            category,
+            reward_type,
+            reward_item,
+            reward_rarity,
+            reward_coins,
+            reward_coupon
+
+        FROM missions
+
+        WHERE type = ANY($1::text[])
+    `;
 
 
-
-// =========================
-// 🎯 TIPOS DE MISIONES
-// =========================
-
-
-const tipos = [
+    const valores = [
+        tiposPermitidos
+    ];
 
 
-{
-type:"slots",
-nombres:[
-"Jugador de tragamonedas",
-"Maestro de la suerte",
-"Rey del casino"
-],
-goals:[
-10,25,50,100
-]
-},
+    // Evitar repetir una misión que el usuario
+    // ya tenga activa.
+
+    if (misionesExistentes.length > 0) {
+
+        query += `
+            AND id <> ALL($2::int[])
+        `;
+
+        valores.push(misionesExistentes);
+    }
 
 
-
-{
-type:"buy",
-nombres:[
-"Comprador novato",
-"Cazador de objetos",
-"Rey de la tienda"
-],
-goals:[
-5,10,25,50
-]
-},
+    query += `
+        ORDER BY RANDOM()
+        LIMIT 1
+    `;
 
 
+    const resultado = await db.query(
+        query,
+        valores
+    );
 
-{
-type:"messages",
-nombres:[
-"Chat activo",
-"Conversador",
-"Spam controlado"
-],
-goals:[
-50,100,250,500
-]
+
+    if (resultado.rows.length === 0) {
+        return null;
+    }
+
+
+    return resultado.rows[0];
 }
 
 
-];
+// =========================================
+// 🎯 GENERAR MISIONES PARA UN USUARIO
+// =========================================
+
+async function generarMisiones(userId) {
+
+    const actuales = await db.query(
+        `
+        SELECT mission_id
+        FROM user_missions
+        WHERE discord_id = $1
+        AND completed = false
+        `,
+        [
+            userId
+        ]
+    );
 
 
+    // Máximo 5 misiones activas.
+
+    if (actuales.rows.length >= 5) {
+        return;
+    }
 
 
+    // IDs de las misiones que ya tiene.
+
+    const misionesExistentes = actuales.rows
+        .map(row => row.mission_id)
+        .filter(id => id !== null);
 
 
+    // Cantidad de misiones que faltan.
+
+    const cantidad = 5 - actuales.rows.length;
 
 
-function random(arr){
+    // Generar las misiones que faltan.
 
-return arr[
-Math.floor(
-Math.random()*arr.length
-)
-];
+    for (let i = 0; i < cantidad; i++) {
 
+        const mision = await obtenerMisionAleatoria(
+            misionesExistentes
+        );
+
+
+        // No quedan misiones disponibles.
+
+        if (!mision) {
+
+            console.log(
+                `⚠️ No quedan misiones disponibles para ${userId}`
+            );
+
+            break;
+        }
+
+
+        // Insertar misión del usuario.
+
+        await db.query(
+            `
+            INSERT INTO user_missions
+            (
+                discord_id,
+                mission_id,
+                progress,
+                completed,
+                rewarded,
+                reward_type,
+                reward_item,
+                reward_rarity,
+                reward_coupon,
+                reward_coins
+            )
+
+            VALUES
+            (
+                $1,
+                $2,
+                0,
+                false,
+                false,
+                $3,
+                $4,
+                $5,
+                $6,
+                $7
+            )
+            `,
+            [
+                userId,
+
+                mision.id,
+
+                mision.reward_type || null,
+
+                mision.reward_item || null,
+
+                mision.reward_rarity || null,
+
+                mision.reward_coupon || null,
+
+                mision.reward_coins || null
+            ]
+        );
+
+
+        // Evitar repetirla durante esta generación.
+
+        misionesExistentes.push(
+            mision.id
+        );
+
+
+        console.log(
+            `✅ Misión asignada a ${userId}: ${mision.name} (ID ${mision.id})`
+        );
+    }
 }
 
 
+// =========================================
+// 🌎 GENERAR MISIONES PARA TODOS LOS USUARIOS
+// =========================================
+
+async function generarMisionesGlobales() {
+
+    const usuarios = await db.query(
+        `
+        SELECT discord_id
+        FROM users
+        `
+    );
 
 
+    for (const usuario of usuarios.rows) {
 
-function crearRecompensa(){
+        try {
 
+            await generarMisiones(
+                usuario.discord_id
+            );
 
+        } catch (error) {
 
-const chance =
-Math.random();
+            console.error(
+                `❌ Error generando misiones para ${usuario.discord_id}:`,
+                error
+            );
 
-
-// 60% monedas
-
-if(chance < 0.60){
-
-
-return {
-
-type:"coins",
-
-coins:
-Math.floor(
-Math.random()*2000
-)+100
-
-};
-
-
+        }
+    }
 }
 
 
+// =========================================
+// 📤 EXPORTAR
+// =========================================
 
+module.exports = {
 
+    generarMisiones,
 
-// 25% objetos
-
-if(chance < 0.85){
-
-
-const item =
-random(objetos);
-
-
-
-return {
-
-
-type:"item",
-
-item:item.emoji,
-
-rarity:item.rarity
-
-
-};
-
-
-}
-
-
-
-
-
-// 15% cupones
-
-
-return {
-
-
-type:"coupon",
-
-coupon:
-Math.floor(
-Math.random()*21
-)+10
-
-
-};
-
-
-
-}
-
-
-
-
-
-
-
-
-
-async function generarMisiones(userId){
-
-
-
-const actuales =
-await db.query(
-`
-SELECT *
-FROM user_missions
-
-WHERE discord_id=$1
-
-AND completed=false
-`,
-[
-userId
-]);
-
-
-
-
-if(actuales.rows.length >= 5){
-
-return;
-
-}
-
-
-
-
-
-
-
-const cantidad =
-5 - actuales.rows.length;
-
-
-
-
-
-
-
-const nuevas =
-[];
-
-
-
-
-
-
-
-for(let i=0;i<cantidad;i++){
-
-
-
-const mision =
-random(tipos);
-
-
-
-const nombre =
-random(
-mision.nombres
-);
-
-
-
-const goal =
-random(
-mision.goals
-);
-
-
-
-
-const recompensa =
-crearRecompensa();
-
-
-
-
-
-
-const insert =
-await db.query(
-`
-SELECT id
-FROM missions
-WHERE type=$1
-ORDER BY RANDOM()
-LIMIT 1
-`,
-[
-mision.type
-]
-);
-
-
-if(insert.rows.length === 0){
-    continue;
-}
-
-
-const missionId =
-insert.rows[0].id;
-
-
-await db.query(
-`
-INSERT INTO user_missions
-
-(
-discord_id,
-mission_id,
-progress,
-completed,
-rewarded,
-reward_type,
-reward_item,
-reward_rarity,
-reward_coupon,
-reward_coins
-)
-
-VALUES
-
-(
-$1,$2,0,false,false,
-$3,$4,$5,$6,$7
-)
-
-`,
-[
-
-userId,
-
-missionId,
-
-recompensa.type,
-
-recompensa.item || null,
-
-recompensa.rarity || null,
-
-recompensa.coupon || null,
-
-recompensa.coins || null
-
-]);
-
-
-
-
-
-}
-
-
-
-}
-
-
-
-
-module.exports={
-
-generarMisiones
+    generarMisionesGlobales
 
 };
