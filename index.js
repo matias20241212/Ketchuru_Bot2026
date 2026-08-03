@@ -1,21 +1,34 @@
+const rankingAPI = require("./web/api/ranking");
+
 const express = require("express");
 const db = require("./database");
 const app = express();
-
-const cron = require("node-cron");
 const fs = require("fs");
 const path = require("path");
 
 const PORT = process.env.PORT || 3000;
 
+app.use(express.json());
+
+// =========================
+// PÁGINA WEB
+// =========================
+
+// Servir todos los archivos de la carpeta web
+app.use(express.static(path.join(__dirname, "web")));
+
+// Abrir el dashboard directamente desde "/"
 app.get("/", (req, res) => {
-    res.send("Ketchuru Bot está online.");
+    res.sendFile(path.join(__dirname, "web/pages/dashboard.html"));
 });
 
+// API Ranking
+app.use("/api", rankingAPI);
+
+// Iniciar servidor
 app.listen(PORT, () => {
     console.log(`Servidor iniciado en el puerto ${PORT}`);
 });
-
 
 const { Client, GatewayIntentBits } = require("discord.js");
 
@@ -307,181 +320,470 @@ message.author.id
             );
         }
     });
-    client.on("interactionCreate", async (interaction) => {
+
+    const marketReviews = require("./systems/market/marketReviews");
+const giftButtons = require("./systems/gifts/giftButtons");
+const giftSystem = require("./systems/gifts/giftSystem");
+
+
+client.on("interactionCreate", async (interaction) => {
+
+
+    // =========================
+    // 🔘 BOTONES
+    // =========================
+
+    if(interaction.isButton()){
+
+
 
         // =========================
-        // 🔘 BOTONES INVENTARIO
+        // 🎁 REGALOS
         // =========================
-        if (interaction.isButton()) {
 
-            const [prefix, ownerId, item] = interaction.customId.split("_");
 
-            if (prefix !== "inv") return;
+        if(interaction.customId === "gift_accept"){
 
-            const { getInventoryState, setInventoryState } = require("./systems/inventoryMenu");
 
-            // 🔒 BLOQUEO TOTAL
-            const state = getInventoryState(interaction.user.id);
-
-            if (!state || state.ownerId !== interaction.user.id) {
-                return interaction.reply({
-                    content: "⚠️ Advertencia: no puedes usar el inventario de otro usuario.",
-                    ephemeral: true
-                });
-            }
-
-            if (interaction.user.id !== ownerId) {
-                return interaction.reply({
-                    content: "⚠️ Este inventario no es tuyo.",
-                    ephemeral: true
-                });
-            }
-
-            setInventoryState(interaction.user.id, {
-                ownerId: interaction.user.id,
-                item,
-                amount: 1
-            });
-
-            const {
-                ActionRowBuilder,
-                ButtonBuilder,
-                ButtonStyle
-            } = require("discord.js");
-
-            const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`use_yes_${interaction.user.id}`)
-                    .setLabel("✅ Usar")
-                    .setStyle(ButtonStyle.Success),
-
-                new ButtonBuilder()
-                    .setCustomId(`use_no_${interaction.user.id}`)
-                    .setLabel("❌ Cancelar")
-                    .setStyle(ButtonStyle.Danger),
-
-                new ButtonBuilder()
-                    .setCustomId(`use_x1_${interaction.user.id}`)
-                    .setLabel("Usar x1")
-                    .setStyle(ButtonStyle.Secondary),
-
-                new ButtonBuilder()
-                    .setCustomId(`use_custom_${interaction.user.id}`)
-                    .setLabel("Usar x cantidad")
-                    .setStyle(ButtonStyle.Primary)
+            const regalos =
+            await giftSystem.obtenerRegalos(
+                interaction.user.id
             );
 
-            return interaction.reply({
-                content: `🎯 Item seleccionado: **${item}**`,
-                components: [row],
-                ephemeral: true
-            });
+
+            return giftButtons.mostrarSeleccionRegalo(
+                interaction,
+                regalos,
+                "accept"
+            );
+
         }
 
-        // =========================
-        // ⚡ USAR ITEM (YES / X1)
-        // =========================
-        if (
-            interaction.customId.startsWith("use_yes_") ||
-            interaction.customId.startsWith("use_x1_")
-        ) {
 
-            const { getInventoryState } = require("./systems/inventoryMenu");
-            const { removeItem } = require("./systems/inventory");
 
-            const state = getInventoryState(interaction.user.id);
 
-            if (!state || state.ownerId !== interaction.user.id) {
-                return interaction.reply({
-                    content: "⚠️ Advertencia: no puedes usar el inventario de otro usuario.",
-                    ephemeral: true
-                });
-            }
+        if(interaction.customId === "gift_reject"){
 
-            removeItem(interaction.user.id, state.item, 1);
 
-            return interaction.reply({
-                content: `✔ Usaste 1x **${state.item}**`,
-                ephemeral: true
-            });
+            const regalos =
+            await giftSystem.obtenerRegalos(
+                interaction.user.id
+            );
+
+
+            return giftButtons.mostrarSeleccionRegalo(
+                interaction,
+                regalos,
+                "reject"
+            );
+
         }
 
-        // =========================
-        // ❌ CANCELAR
-        // =========================
-        if (interaction.customId.startsWith("use_no_")) {
-            return interaction.reply({
-                content: "❌ Cancelado",
-                ephemeral: true
-            });
-        }
+
+
+
+
 
         // =========================
-        // 🧾 MODAL
+        // ⭐ REPUTACIÓN PERSA
         // =========================
-        if (interaction.customId.startsWith("use_custom_")) {
 
-            const {
-                ModalBuilder,
-                TextInputBuilder,
-                TextInputStyle,
-                ActionRowBuilder
-            } = require("discord.js");
 
-            const modal = new ModalBuilder()
-                .setCustomId(`modal_use_${interaction.user.id}`)
-                .setTitle("Usar items");
+        if(
+            interaction.customId.startsWith("review_")
+        ){
 
-            const input = new TextInputBuilder()
-                .setCustomId("cantidad")
-                .setLabel("¿Cuántos quieres usar?")
-                .setStyle(TextInputStyle.Short);
 
-            const row = new ActionRowBuilder().addComponents(input);
+            const estrellas =
+            Number(
+                interaction.customId.split("_")[1]
+            );
 
-            modal.addComponents(row);
-
-            return interaction.showModal(modal);
-        }
-
-        // =========================
-        // 🧾 MODAL SUBMIT
-        // =========================
-        if (interaction.isModalSubmit()) {
-
-            if (!interaction.customId.startsWith("modal_use_")) return;
-
-            const { getInventoryState } = require("./systems/inventoryMenu");
-            const { removeItem } = require("./systems/inventory");
-
-            const userId = interaction.user.id;
-
-            const cantidad = parseInt(interaction.fields.getTextInputValue("cantidad"));
-
-            if (isNaN(cantidad) || cantidad <= 0) {
-                return interaction.reply({
-                    content: "❌ Cantidad inválida",
-                    ephemeral: true
-                });
-            }
-
-            const state = getInventoryState(userId);
-
-            if (!state || state.ownerId !== userId) {
-                return interaction.reply({
-                    content: "⚠️ Advertencia: no puedes usar inventario de otro usuario.",
-                    ephemeral: true
-                });
-            }
-
-            removeItem(userId, state.item, cantidad);
 
             return interaction.reply({
-                content: `✔ Usaste **${cantidad}x ${state.item}**`,
-                ephemeral: true
+
+                content:
+                `⭐ Elegiste ${estrellas} estrellas.\n\nAhora escribe tu comentario.`,
+
+                ephemeral:true
+
             });
+
+
         }
+
+// =========================
+// 🎒 INVENTARIO
+// =========================
+
+if(
+    interaction.customId.startsWith("inv_item")
+){
+
+    const data =
+    interaction.customId.split("_");
+
+
+    const ownerId =
+    data[2];
+
+
+    const page =
+    Number(data[3]);
+
+
+    const index =
+    Number(data[4]);
+
+
+    if(interaction.user.id !== ownerId){
+
+        return interaction.reply({
+
+            content:
+            "⚠️ Este inventario no es tuyo.",
+
+            ephemeral:true
+
+        });
+
+    }
+
+
+
+    const {
+        getInventory
+    } = require("./systems/inventory");
+
+
+    const {
+        paginate
+    } = require("./systems/inventorySystem");
+
+
+    const {
+        createUseMenu
+    } = require("./systems/inventoryUseMenu");
+
+
+
+    const items =
+    await getInventory(
+        interaction.user.id
+    );
+
+
+    const current =
+    paginate(
+        items,
+        page,
+        10
+    );
+
+
+    const objeto =
+    current[index];
+
+
+    if(!objeto){
+
+        return interaction.reply({
+
+            content:
+            "❌ No existe ese objeto.",
+
+            ephemeral:true
+
+        });
+
+    }
+
+
+
+    const {
+        setInventoryState
+    } = require("./systems/inventoryMenu");
+
+
+
+    setInventoryState(
+
+        interaction.user.id,
+
+        {
+            ownerId,
+            item: objeto.item
+        }
+
+    );
+
+
+
+    return interaction.reply({
+
+        content:
+`
+🎒 **Objeto seleccionado**
+
+${objeto.emoji || "📦"} **${objeto.item}**
+
+📦 Cantidad:
+${objeto.amount}
+
+¿Cuántos quieres usar?
+`,
+
+        components:
+        createUseMenu(objeto.item),
+
+        ephemeral:true
+
     });
+
+}
+
+
+
+
+// =========================
+// ⚡ USAR ITEM
+// =========================
+
+
+if(
+    interaction.customId.startsWith("use_")
+){
+
+    const data =
+    interaction.customId.split("_");
+
+
+    const accion =
+    data[1];
+
+
+
+    const {
+        getInventoryState
+    } = require("./systems/inventoryMenu");
+
+
+    const {
+        removeItem
+    } = require("./systems/inventory");
+
+
+
+    const state =
+    getInventoryState(
+        interaction.user.id
+    );
+
+
+
+    if(!state){
+
+        return interaction.reply({
+
+            content:
+            "⚠️ Inventario cerrado.",
+
+            ephemeral:true
+
+        });
+
+    }
+
+
+
+    if(accion === "cancel"){
+
+        return interaction.update({
+
+            content:
+            "❌ Acción cancelada.",
+
+            components:[]
+
+        });
+
+    }
+
+
+
+    let cantidad = 1;
+
+
+    if(accion === "three"){
+
+        cantidad = 3;
+
+    }
+
+
+
+    if(accion === "custom"){
+
+        const {
+            ModalBuilder,
+            TextInputBuilder,
+            TextInputStyle,
+            ActionRowBuilder
+        } = require("discord.js");
+
+
+
+        const modal =
+        new ModalBuilder()
+        .setCustomId(
+            "modal_use"
+        )
+        .setTitle(
+            "Cantidad a usar"
+        );
+
+
+
+        const input =
+        new TextInputBuilder()
+        .setCustomId("cantidad")
+        .setLabel("Cantidad")
+        .setStyle(
+            TextInputStyle.Short
+        );
+
+
+
+        modal.addComponents(
+
+            new ActionRowBuilder()
+            .addComponents(input)
+
+        );
+
+
+        return interaction.showModal(modal);
+
+    }
+
+
+
+    await removeItem(
+
+        interaction.user.id,
+
+        state.item,
+
+        cantidad
+
+    );
+
+
+
+    return interaction.reply({
+
+        content:
+        `✔ Usaste **${cantidad}x ${state.item}**`,
+
+        ephemeral:true
+
+    });
+
+
+}
+
+    // =========================
+    // 🧾 MODAL SUBMIT
+    // =========================
+
+    } // CIERRE DEL BLOQUE DE BOTONES
+    if(interaction.isModalSubmit()){
+
+
+        if(
+            !interaction.customId.startsWith("modal_use_")
+        )
+        return;
+
+
+
+        const {
+            getInventoryState
+        } = require("./systems/inventoryMenu");
+
+
+        const {
+            removeItem
+        } = require("./systems/inventory");
+
+
+
+        const cantidad =
+        parseInt(
+            interaction.fields.getTextInputValue("cantidad")
+        );
+
+
+
+        if(
+            isNaN(cantidad) ||
+            cantidad <=0
+        ){
+
+            return interaction.reply({
+
+                content:"❌ Cantidad inválida",
+
+                ephemeral:true
+
+            });
+
+        }
+
+
+
+        const state =
+        getInventoryState(
+            interaction.user.id
+        );
+
+
+
+        if(!state){
+
+            return interaction.reply({
+
+                content:"⚠️ Inventario cerrado.",
+
+                ephemeral:true
+
+            });
+
+        }
+
+
+
+        removeItem(
+            interaction.user.id,
+            state.item,
+            cantidad
+        );
+
+
+
+        return interaction.reply({
+
+            content:
+            `✔ Usaste **${cantidad}x ${state.item}**`,
+
+            ephemeral:true
+
+        });
+
+
+    }
+
+});
 
     // =========================
     // LOGIN

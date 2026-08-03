@@ -22,8 +22,18 @@ function paginate(items, page = 0, perPage = 10) {
     );
 }
 
+const inventoryStates = new Map();
+
+function setInventoryState(userId, state) {
+    inventoryStates.set(userId, state);
+}
+
+function getInventoryState(userId) {
+    return inventoryStates.get(userId);
+}
 
 module.exports = {
-    formatInventory,
-    paginate
+    createInventoryButtons,
+    setInventoryState,
+    getInventoryState
 };
