@@ -13,7 +13,7 @@ const antiAbuse = require("./ruletaAntiAbuse");
 
 const history = require("./ruletaHistory");
 
-const proteccionRuleta = require("../moderation/proteccionRuleta");
+const proteccionRuleta = require("../../moderation/proteccionRuleta");
 
 const leaderboard = require("./ruletaLeaderboard");
 
