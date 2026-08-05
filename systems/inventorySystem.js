@@ -33,7 +33,7 @@ function getInventoryState(userId) {
 }
 
 module.exports = {
-    createInventoryButtons,
+    paginate,
     setInventoryState,
     getInventoryState
 };
