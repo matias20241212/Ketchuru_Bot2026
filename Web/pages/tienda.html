@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ketchuru Bot - Tienda</title>
+
+<link rel="stylesheet" href="../style.css">
+
+
+<style>
+
+
+body{
+
+margin:0;
+min-height:100vh;
+
+font-family:Arial, sans-serif;
+
+color:white;
+
+background-image:url("https://images.unsplash.com/photo-1511512578047-dfb367046420");
+
+background-size:cover;
+
+background-position:center;
+
+}
+
+
+/* BORDE NEGRO EN LETRAS */
+
+h1,
+h2,
+p,
+.comando,
+.info,
+.titulo{
+
+text-shadow:
+-2px -2px 0 #000,
+2px -2px 0 #000,
+-2px 2px 0 #000,
+2px 2px 0 #000;
+
+}
+
+
+
+/* CONTENIDO */
+
+
+.tienda{
+
+padding:40px;
+
+text-align:center;
+
+}
+
+
+
+h1{
+
+font-size:50px;
+
+margin-bottom:15px;
+
+}
+
+
+
+.subtitulo{
+
+font-size:22px;
+
+}
+
+
+
+/* CAJAS */
+
+
+.informacion{
+
+margin-top:40px;
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+
+gap:30px;
+
+}
+
+
+
+.caja{
+
+background:rgba(255,255,255,0.15);
+
+backdrop-filter:blur(8px);
+
+padding:30px;
+
+border-radius:20px;
+
+transition:0.3s;
+
+}
+
+
+
+.caja:hover{
+
+transform:translateY(-8px);
+
+}
+
+
+
+.titulo{
+
+font-size:28px;
+
+margin-bottom:15px;
+
+}
+
+
+
+.info{
+
+font-size:18px;
+
+line-height:1.6;
+
+}
+
+
+
+.comando{
+
+font-size:24px;
+
+color:#ffd700;
+
+margin-top:15px;
+
+font-weight:bold;
+
+}
+
+
+
+
+/* RESTOCK */
+
+
+.restock{
+
+margin-top:40px;
+
+background:rgba(0,0,0,0.25);
+
+padding:30px;
+
+border-radius:20px;
+
+}
+
+
+
+.horario{
+
+font-size:20px;
+
+line-height:1.8;
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+
+<body>
+
+
+<section class="tienda">
+
+
+
+<h1>🛒 Tienda Ketchuru</h1>
+
+
+<p class="subtitulo">
+
+Compra objetos, consigue rarezas y mejora tu inventario usando monedas.
+
+</p>
+
+
+
+
+<div class="informacion">
+
+
+
+<div class="caja">
+
+
+<div class="titulo">
+
+📦 ¿Cómo funciona la tienda?
+
+</div>
+
+
+<p class="info">
+
+La tienda de Ketchuru tiene diferentes objetos con distintas rarezas y precios.
+
+Cada objeto aparece con un stock limitado, por lo que algunos objetos pueden agotarse.
+
+Puedes revisar los objetos disponibles usando:
+
+</p>
+
+
+<div class="comando">
+
+!shop
+
+</div>
+
+
+<p class="info">
+
+Cuando compres un objeto, este será enviado directamente a tu inventario.
+
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="caja">
+
+
+<div class="titulo">
+
+💰 Comprar objetos
+
+</div>
+
+
+<p class="info">
+
+Para comprar un objeto necesitas tener suficientes monedas.
+
+Usa el comando:
+
+</p>
+
+
+<div class="comando">
+
+!buy
+
+</div>
+
+
+<p class="info">
+
+Ejemplo:
+
+<br>
+
+!buy 🍩
+
+<br><br>
+
+El objeto comprado aparecerá automáticamente en tu inventario.
+
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="caja">
+
+
+<div class="titulo">
+
+🔄 Sistema de Restock
+
+</div>
+
+
+<p class="info">
+
+La tienda se actualiza automáticamente con nuevos objetos.
+
+Los restock ocurren según el horario establecido por Ketchuru.
+
+Los objetos disponibles pueden cambiar en cada actualización.
+
+</p>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+<div class="restock">
+
+
+<h2>
+
+⏰ Horarios de Restock
+
+</h2>
+
+
+
+<p class="horario">
+
+
+Todos los horarios están en:
+
+<br>
+
+<b>UTC-4 (Hora de Chile)</b>
+
+
+<br><br>
+
+
+📅 Lunes a Jueves
+
+<br>
+
+Cada 24 horas a las 20:00
+
+
+<br><br>
+
+
+📅 Viernes y Domingo
+
+<br>
+
+08:00 y 20:00
+
+
+<br><br>
+
+
+📅 Sábado
+
+<br>
+
+02:00 - 08:00 - 14:00 - 20:00
+
+
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="caja" style="margin-top:40px;">
+
+
+<div class="titulo">
+
+📢 ¿Dónde ver los próximos Restock?
+
+</div>
+
+
+<p class="info">
+
+Puedes revisar cuándo será el próximo restock usando:
+
+</p>
+
+
+<div class="comando">
+
+!restocktime
+
+</div>
+
+
+<p class="info">
+
+También puedes estar atento al servidor oficial de Discord de Ketchuru para eventos especiales y cambios de horario.
+
+</p>
+
+
+
+</div>
+
+
+
+</section>
+
+
+</body>
+
+</html>

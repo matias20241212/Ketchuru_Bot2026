@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ketchuru Bot - Ranking</title>
+
+<link rel="stylesheet" href="../style.css">
+
+
+<style>
+
+
+body{
+
+margin:0;
+
+min-height:100vh;
+
+font-family:Arial,sans-serif;
+
+color:white;
+
+background-image:url("https://images.unsplash.com/photo-1509557965875-b88c97052f0e");
+
+background-size:cover;
+
+background-position:center;
+
+}
+
+
+/* REMARCADO NEGRO */
+
+h1,
+h2,
+p,
+.username,
+.nombre,
+.servidor{
+
+text-shadow:
+-2px -2px 0 #000,
+2px -2px 0 #000,
+-2px 2px 0 #000,
+2px 2px 0 #000;
+
+}
+
+
+
+.contenedor{
+
+padding:40px;
+
+text-align:center;
+
+}
+
+
+
+h1{
+
+font-size:55px;
+
+}
+
+
+
+.descripcion{
+
+font-size:22px;
+
+}
+
+
+
+
+.ranking{
+
+margin-top:45px;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+gap:25px;
+
+}
+
+
+
+
+
+.usuario{
+
+
+width:80%;
+
+max-width:750px;
+
+
+background:rgba(255,255,255,0.15);
+
+backdrop-filter:blur(8px);
+
+
+border-radius:20px;
+
+padding:25px;
+
+
+display:flex;
+
+align-items:center;
+
+
+gap:25px;
+
+
+transition:0.3s;
+
+}
+
+
+
+.usuario:hover{
+
+transform:translateY(-8px);
+
+}
+
+
+
+
+
+.medalla{
+
+font-size:55px;
+
+}
+
+
+
+
+
+.avatar{
+
+width:90px;
+
+height:90px;
+
+border-radius:50%;
+
+border:3px solid white;
+
+object-fit:cover;
+
+}
+
+
+
+
+.datos{
+
+text-align:left;
+
+}
+
+
+
+.username{
+
+font-size:27px;
+
+font-weight:bold;
+
+}
+
+
+
+.nombre{
+
+font-size:19px;
+
+margin-top:5px;
+
+}
+
+
+
+.servidor{
+
+margin-top:15px;
+
+font-size:18px;
+
+}
+
+
+
+.servidor a{
+
+color:white;
+
+text-decoration:none;
+
+font-weight:bold;
+
+}
+
+
+
+.servidor a:hover{
+
+color:#ff9900;
+
+}
+
+
+
+
+
+.info{
+
+max-width:850px;
+
+margin:50px auto;
+
+
+background:rgba(255,255,255,0.15);
+
+backdrop-filter:blur(8px);
+
+
+padding:30px;
+
+border-radius:20px;
+
+}
+
+
+
+
+</style>
+
+
+</head>
+
+
+<body>
+
+
+<section class="contenedor">
+
+
+<h1>
+
+🎃🏆 Ranking Ketchuru
+
+</h1>
+
+
+<p class="descripcion">
+
+Los usuarios con más monedas de todos los servidores donde está Ketchuru.
+
+</p>
+
+
+
+
+
+<div class="ranking">
+
+
+
+
+
+<div class="usuario">
+
+
+<div class="medalla">
+
+🥇
+
+</div>
+
+
+<img class="avatar" src="../images/default-avatar.png">
+
+
+<div class="datos">
+
+
+<div class="username">
+
+@usuario_discord
+
+</div>
+
+
+<div class="nombre">
+
+Nombre de Discord
+
+</div>
+
+
+
+<div class="servidor">
+
+🌎
+
+<a href="#" >
+
+Servidor de Discord
+
+</a>
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="usuario">
+
+
+<div class="medalla">
+
+🥈
+
+</div>
+
+
+<img class="avatar" src="../images/default-avatar.png">
+
+
+<div class="datos">
+
+
+<div class="username">
+
+@usuario_discord
+
+</div>
+
+
+<div class="nombre">
+
+Nombre de Discord
+
+</div>
+
+
+
+<div class="servidor">
+
+🌎
+
+<a href="#">
+
+Servidor de Discord
+
+</a>
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="usuario">
+
+
+<div class="medalla">
+
+🥉
+
+</div>
+
+
+<img class="avatar" src="../images/default-avatar.png">
+
+
+<div class="datos">
+
+
+<div class="username">
+
+@usuario_discord
+
+</div>
+
+
+<div class="nombre">
+
+Nombre de Discord
+
+</div>
+
+
+
+<div class="servidor">
+
+🌎
+
+<a href="#">
+
+Servidor de Discord
+
+</a>
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+<div class="info">
+
+
+<h2>
+
+🎰 ¿Cómo subir al ranking?
+
+</h2>
+
+
+<p>
+
+Las monedas del ranking se consiguen usando los sistemas de Ketchuru:
+
+<br><br>
+
+🎰 !tragamonedas
+
+<br>
+
+🎯 Misiones
+
+<br>
+
+🛒 Tienda
+
+<br>
+
+🎁 Eventos especiales
+
+<br><br>
+
+El ranking se actualizará automáticamente mostrando a los usuarios con más monedas.
+
+</p>
+
+
+</div>
+
+
+
+</section>
+
+
+</body>
+
+</html>

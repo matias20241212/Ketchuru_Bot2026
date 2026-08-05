@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ketchuru Bot - Misiones</title>
+
+<link rel="stylesheet" href="../style.css">
+
+<style>
+
+body{
+    margin:0;
+    min-height:100vh;
+    font-family:Arial, sans-serif;
+    color:white;
+
+    background:
+    linear-gradient(
+        rgba(0,0,0,0.35),
+        rgba(0,0,0,0.35)
+    ),
+    url("../images/profile-baner.png");
+
+    background-size:cover;
+    background-position:center;
+}
+
+
+.misiones{
+    padding:40px;
+    text-align:center;
+}
+
+
+h1{
+    font-size:45px;
+}
+
+
+.descripcion{
+    font-size:20px;
+    opacity:0.9;
+}
+
+
+.lista{
+    margin-top:40px;
+
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+
+    gap:25px;
+}
+
+
+.mision{
+
+    background:rgba(255,255,255,0.12);
+
+    backdrop-filter:blur(8px);
+
+    border-radius:20px;
+
+    padding:25px;
+
+    transition:0.3s;
+}
+
+
+.mision:hover{
+
+    transform:translateY(-8px);
+
+    background:rgba(255,255,255,0.18);
+
+}
+
+
+.icono{
+    font-size:45px;
+}
+
+
+.nombre{
+
+    font-size:25px;
+
+    margin:15px 0;
+
+}
+
+
+.recompensa{
+
+    color:#ffd700;
+
+    font-size:18px;
+
+}
+
+
+.estado{
+
+    margin-top:15px;
+
+    opacity:0.8;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<section class="misiones">
+
+
+<h1>🎯 Misiones Ketchuru</h1>
+
+
+<p class="descripcion">
+Completa misiones diarias y consigue recompensas.
+</p>
+
+
+
+<div class="lista">
+
+
+
+<div class="mision">
+
+<div class="icono">💬</div>
+
+<div class="nombre">
+Habla con el servidor
+</div>
+
+<p>
+Envía mensajes para completar esta misión.
+</p>
+
+<div class="recompensa">
+🎁 500🪙
+</div>
+
+<div class="estado">
+Disponible diariamente
+</div>
+
+</div>
+
+
+
+
+<div class="mision">
+
+<div class="icono">🎰</div>
+
+<div class="nombre">
+Juega tragamonedas
+</div>
+
+<p>
+Prueba tu suerte en Ketchuru.
+</p>
+
+<div class="recompensa">
+🎁 Objeto aleatorio
+</div>
+
+<div class="estado">
+Reinicio diario
+</div>
+
+</div>
+
+
+
+
+<div class="mision">
+
+<div class="icono">🛒</div>
+
+<div class="nombre">
+Compra objetos
+</div>
+
+<p>
+Consigue objetos en la tienda.
+</p>
+
+<div class="recompensa">
+🎁 Experiencia
+</div>
+
+<div class="estado">
+Misiones rotativas
+</div>
+
+</div>
+
+
+
+</div>
+
+
+</section>
+
+
+</body>
+</html>

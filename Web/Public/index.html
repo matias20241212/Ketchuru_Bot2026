@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ketchuru Bot</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+scroll-behavior:smooth;
+}
+
+body{
+
+font-family:Arial,Helvetica,sans-serif;
+background:#090909;
+color:white;
+overflow-x:hidden;
+
+}
+
+/* ========================= */
+/* FONDO */
+/* ========================= */
+
+.background{
+
+position:fixed;
+inset:0;
+z-index:-100;
+overflow:hidden;
+
+}
+
+.circle{
+
+position:absolute;
+border-radius:50%;
+filter:blur(90px);
+opacity:.45;
+
+animation:float 18s infinite alternate ease-in-out;
+
+}
+
+.c1{
+
+background:#ff2d2d;
+width:500px;
+height:500px;
+left:-100px;
+top:-50px;
+
+}
+
+.c2{
+
+background:#ff9800;
+width:420px;
+height:420px;
+right:-80px;
+top:80px;
+
+}
+
+.c3{
+
+background:#7b3f00;
+width:500px;
+height:500px;
+left:20%;
+bottom:-150px;
+
+}
+
+.c4{
+
+background:#ffd54f;
+width:350px;
+height:350px;
+right:15%;
+bottom:-100px;
+
+}
+
+.c5{
+
+background:#111;
+width:650px;
+height:650px;
+left:40%;
+top:20%;
+
+opacity:.8;
+
+}
+
+@keyframes float{
+
+0%{
+
+transform:translateY(0px) translateX(0px);
+
+}
+
+100%{
+
+transform:translateY(-60px) translateX(40px);
+
+}
+
+}
+
+/* ========================= */
+
+header{
+
+width:100%;
+padding:25px 60px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+background:rgba(0,0,0,.45);
+
+backdrop-filter:blur(8px);
+
+position:sticky;
+
+top:0;
+
+z-index:500;
+
+}
+
+.logo{
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+}
+
+.logo h1{
+
+font-size:28px;
+
+}
+
+.logo span{
+
+color:orange;
+
+}
+
+.invite{
+
+background:#5865F2;
+
+padding:14px 22px;
+
+border-radius:12px;
+
+text-decoration:none;
+
+color:white;
+
+font-weight:bold;
+
+transition:.25s;
+
+}
+
+.invite:hover{
+
+transform:scale(1.06);
+
+}
+
+nav{
+
+display:flex;
+
+gap:12px;
+
+align-items:center;
+
+}
+
+
+nav a{
+
+color:white;
+
+text-decoration:none;
+
+font-weight:bold;
+
+padding:10px 12px;
+
+border-radius:10px;
+
+background:rgba(255,255,255,.08);
+
+transition:.25s;
+
+font-size:14px;
+
+}
+
+
+nav a:hover{
+
+background:orange;
+
+transform:translateY(-3px);
+
+}
+
+.hero{
+
+width:100%;
+
+padding:70px 40px;
+
+text-align:center;
+
+}
+
+.hero h2{
+
+font-size:55px;
+
+margin-bottom:20px;
+
+}
+
+.hero p{
+
+max-width:900px;
+
+margin:auto;
+
+line-height:1.8;
+
+font-size:18px;
+
+opacity:.9;
+
+}
+
+.hero-icons{
+
+margin-top:35px;
+
+font-size:40px;
+
+display:flex;
+
+justify-content:center;
+
+gap:25px;
+
+}
+
+.hero-icons div{
+
+background:rgba(255,255,255,.05);
+
+padding:18px;
+
+border-radius:18px;
+
+}
+
+/* ================================= */
+
+.main{
+
+max-width:1700px;
+
+margin:auto;
+
+padding:50px;
+
+display:grid;
+
+grid-template-columns:1.4fr .9fr 1.4fr;
+
+gap:25px;
+
+}
+
+/* ================================= */
+
+.card{
+
+background:rgba(0,0,0,.55);
+
+backdrop-filter:blur(8px);
+
+padding:22px;
+
+border-radius:18px;
+
+box-shadow:0 0 25px rgba(255,120,0,.15);
+
+margin-bottom:25px;
+
+transition:.25s;
+
+}
+
+.card:hover{
+
+transform:translateY(-5px);
+
+box-shadow:0 0 35px rgba(255,160,0,.35);
+
+}
+
+.card h2{
+
+margin-bottom:15px;
+
+color:#FFD54F;
+
+font-size:25px;
+
+}
+
+.card p{
+
+line-height:1.8;
+
+font-size:15px;
+
+opacity:.92;
+
+margin-bottom:12px;
+
+}
+
+.card ul{
+
+padding-left:25px;
+
+line-height:2;
+
+}
+
+.card li{
+
+margin-bottom:5px;
+
+}
+
+/* ======================= */
+
+.profile{
+
+text-align:center;
+
+}
+
+.profile img{
+
+width:230px;
+
+height:230px;
+
+border-radius:50%;
+
+object-fit:cover;
+
+border:5px solid orange;
+
+box-shadow:0 0 35px orange;
+
+animation:profileFloat 3s infinite ease-in-out;
+
+}
+
+@keyframes profileFloat{
+
+0%{
+
+transform:translateY(0);
+
+}
+
+50%{
+
+transform:translateY(-8px);
+
+}
+
+100%{
+
+transform:translateY(0);
+
+}
+
+}
+
+.profile h2{
+
+margin-top:20px;
+
+font-size:34px;
+
+}
+
+.profile p{
+
+margin-top:15px;
+
+line-height:1.8;
+
+}
+
+.profile hr{
+
+margin:20px 0;
+
+border:none;
+
+height:2px;
+
+background:rgba(255,255,255,.1);
+
+}
+
+.profile .status{
+
+display:flex;
+
+justify-content:center;
+
+gap:10px;
+
+margin-top:15px;
+
+flex-wrap:wrap;
+
+}
+
+.status span{
+
+background:rgba(255,255,255,.07);
+
+padding:10px 16px;
+
+border-radius:12px;
+
+}
+
+/* ====================================== */
+
+.menu-btn{
+
+display:none;
+
+background:none;
+
+border:none;
+
+color:white;
+
+font-size:30px;
+
+cursor:pointer;
+
+}
+
+
+
+@media(max-width:900px){
+
+
+header{
+
+padding:20px;
+
+flex-wrap:wrap;
+
+}
+
+
+.menu-btn{
+
+display:block;
+
+}
+
+
+nav{
+
+display:none;
+
+width:100%;
+
+flex-direction:column;
+
+text-align:center;
+
+}
+
+
+nav.active{
+
+display:flex;
+
+}
+
+
+.invite{
+
+margin-top:15px;
+
+}
+
+
+}
+
+</style>
+.menu-flotante{
+
+position:fixed;
+top:20px;
+right:20px;
+z-index:999;
+
+display:flex;
+gap:10px;
+
+}
+
+
+.menu-flotante a{
+
+background:rgba(0,0,0,.65);
+
+color:white;
+
+text-decoration:none;
+
+padding:12px 18px;
+
+border-radius:12px;
+
+font-weight:bold;
+
+border:2px solid black;
+
+text-shadow:
+1px 1px 0 black,
+-1px -1px 0 black;
+
+transition:.25s;
+
+}
+
+
+.menu-flotante a:hover{
+
+transform:scale(1.08);
+
+background:#ff9800;
+
+}
+
+</head>
+
+<body>
+
+<div class="background">
+    <div class="circle c1"></div>
+    <div class="circle c2"></div>
+    <div class="circle c3"></div>
+    <div class="circle c4"></div>
+    <div class="circle c5"></div>
+</div>
+
+<header>
+
+<div class="logo">
+<h1>Ketchuru <span>Bot</span></h1>
+</div>
+
+<button class="menu-btn">
+☰
+</button>
+
+<nav>
+
+<a href="pages/comandos.html">
+📜 Comandos
+</a>
+
+<a href="pages/economia.html">
+💰 Economía
+</a>
+
+<a href="pages/misiones.html">
+🎯 Misiones
+</a>
+
+<a href="pages/tienda.html">
+🛒 Tienda
+</a>
+
+<a href="pages/codigos.html">
+🎁 Códigos
+</a>
+
+<a href="pages/ranking.html">
+🏆 Ranking
+</a>
+
+<a href="pages/noticias.html">
+📰 Noticias
+</a>
+
+<a href="pages/dashboard.html">📊 Dashboard</a>
+<a href="pages/dashboard-servidor.html">🖥️ Dashboard Servidor</a>
+<a href="pages/dashboard-recomendaciones.html">💡 Recomendaciones</a>
+
+</nav>
+
+
+
+<a class="invite"
+href="https://discord.com/oauth2/authorize"
+target="_blank">
+➕ Invitar a Discord
+</a>
+
+
+</header>
+
+<section class="hero">
+
+<h2>🤖 Bienvenido a Ketchuru Bot</h2>
+
+<p>
+
+Ketchuru Bot es un bot de Discord inspirado en la creatividad y la diversión de
+Steal a Brainrot. Fue diseñado para ofrecer una experiencia completa de
+economía, entretenimiento, progresión, inventario, tienda y mucho más.
+
+Nuestro objetivo es seguir creciendo constantemente añadiendo nuevas funciones,
+objetos, eventos y sistemas para toda la comunidad.
+
+</p>
+
+<div class="hero-icons">
+
+<div>💰</div>
+<div>🎰</div>
+<div>🛒</div>
+<div>🎁</div>
+<div>📈</div>
+<div>🤖</div>
+
+</div>
+
+</section>
+
+<section class="main">
+
+<!-- =========================== -->
+<!-- COLUMNA IZQUIERDA -->
+<!-- =========================== -->
+
+<div>
+
+<div class="card">
+
+<h2>🪙 Información del Bot</h2>
+
+<p>
+
+Ketchuru Bot incorpora un completo sistema de economía pensado para mantener a
+los usuarios activos mediante recompensas, niveles y eventos especiales.
+
+</p>
+
+<ul>
+
+<li>💰 Economía con monedas.</li>
+
+<li>🛒 Tienda con distintos niveles de rareza.</li>
+
+<li>🎒 Inventario permanente.</li>
+
+<li>🎁 Daily Rewards.</li>
+
+<li>📈 Sistema de niveles.</li>
+
+<li>🏆 Rankings globales.</li>
+
+<li>🎲 Minijuegos.</li>
+
+<li>🍀 Eventos aleatorios.</li>
+
+<li>⭐ Objetos exclusivos.</li>
+
+<li>🎉 Eventos temporales.</li>
+
+<li>⚡ Mejoras constantes.</li>
+
+<li>👑 Recompensas Premium.</li>
+
+</ul>
+
+</div>
+
+<div class="card">
+
+<h2>🌟 Información Extra</h2>
+
+<p>
+
+El proyecto se encuentra en constante desarrollo.
+
+Cada actualización añade nuevas funciones,
+nuevos objetos,
+más comandos,
+más mejoras visuales
+y nuevas mecánicas para la comunidad.
+
+</p>
+
+<ul>
+
+<li>🤝 Trading.</li>
+
+<li>💎 Objetos raros.</li>
+
+<li>🎊 Eventos especiales.</li>
+
+<li>🎯 Misiones.</li>
+
+<li>🔥 Actualizaciones frecuentes.</li>
+
+<li>🛡️ Seguridad.</li>
+
+<li>⚙️ Optimización.</li>
+
+<li>📚 Nuevos sistemas.</li>
+
+</ul>
+
+</div>
+
+</div>
+
+<!-- =========================== -->
+<!-- PERFIL -->
+<!-- =========================== -->
+
+<div>
+
+<div class="card profile">
+
+<img
+src="https://cdn.discordapp.com/attachments/1465861604032909453/1523531793737846784/Captura_de_pantalla_2026-07-05_230953.png?ex=6a4c730d&is=6a4b218d&hm=f4d52b66c40ee5b4c0eb0fbd57eb36751c8c3a44e43bfaaa96ac2e98a5b0e4c8">
+
+<h2>🤖 Ketchuru Bot</h2>
+
+<p>
+
+Bot especializado en economía,
+diversión,
+automatización,
+gestión
+y entretenimiento para servidores de Discord.
+
+</p>
+
+<hr>
+
+<div class="status">
+
+<span>🟢 En desarrollo</span>
+
+<span>🚀 Optimizado</span>
+
+<span>👥 Comunidad activa</span>
+
+<span>⚡ Actualizaciones</span>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- =========================== -->
+<!-- COLUMNA DERECHA -->
+<!-- =========================== -->
+
+<div>
+
+<div class="card">
+
+<h2>🎰 Comando !tragamonedas</h2>
+
+<p>
+
+Pon a prueba tu suerte con el sistema de tragamonedas.
+
+Obtén premios,
+jackpots
+y recompensas especiales.
+
+</p>
+
+<ul>
+
+<li>🍒 Combinaciones.</li>
+
+<li>🍋 Símbolos.</li>
+
+<li>💎 Premios raros.</li>
+
+<li>👑 Jackpot.</li>
+
+<li>🎉 Multiplicadores.</li>
+
+<li>💰 Grandes ganancias.</li>
+
+<li>⭐ Emojis exclusivos.</li>
+
+<li>🔥 Eventos especiales.</li>
+
+</ul>
+
+</div>
+
+<div class="card">
+
+<h2>💬 Comando !mensajes</h2>
+
+<p>
+
+Permite visualizar información,
+mensajes importantes
+y futuras utilidades del bot.
+
+</p>
+
+<ul>
+
+<li>📨 Mensajes del sistema.</li>
+
+<li>📢 Avisos.</li>
+
+<li>📋 Información.</li>
+
+<li>⚙️ Utilidades.</li>
+
+<li>💡 Ayuda.</li>
+
+</ul>
+
+</div>
+<div class="card">
+
+<h2>❓ ¿Cómo sirve mi bot?</h2>
+
+<p>
+
+Ketchuru Bot fue diseñado para que cualquier servidor pueda
+tener una economía divertida y un sistema de entretenimiento
+completo sin necesidad de configuraciones complicadas.
+
+</p>
+
+<br>
+
+<h3>🤔 Preguntas frecuentes</h3>
+
+<br>
+
+<p><b>❓ ¿Es gratis?</b></p>
+<p>✅ Sí. Todas las funciones principales pueden utilizarse gratuitamente.</p>
+
+<br>
+
+<p><b>❓ ¿Tiene economía?</b></p>
+<p>💰 Sí. Incluye monedas, tienda, inventario y recompensas.</p>
+
+<br>
+
+<p><b>❓ ¿Tiene niveles?</b></p>
+<p>📈 Sí. Los usuarios suben de nivel participando en el servidor.</p>
+
+<br>
+
+<p><b>❓ ¿Hay eventos?</b></p>
+<p>🎉 Sí. Constantemente se añaden eventos y recompensas especiales.</p>
+
+<br>
+
+<p><b>❓ ¿El bot seguirá actualizándose?</b></p>
+<p>🚀 Sí. El proyecto continuará creciendo con nuevas funciones.</p>
+
+<br>
+
+<p><b>⭐ Próximamente</b></p>
+
+<ul>
+
+<li>🛒 Tienda visual.</li>
+
+<li>🎒 Inventario interactivo.</li>
+
+<li>🎰 Nuevos minijuegos.</li>
+
+<li>📊 Estadísticas.</li>
+
+<li>🏆 Logros.</li>
+
+<li>👑 Objetos exclusivos.</li>
+
+<li>🌍 Eventos globales.</li>
+
+<li>🎁 Recompensas especiales.</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</section>
+
+<section style="max-width:1500px;margin:auto;padding:20px 50px 70px;">
+
+<div class="card">
+
+<h2 style="text-align:center;">❤️ Créditos</h2>
+
+<p style="text-align:center;line-height:2;">
+
+🎮 Inspiración del proyecto:
+<b>Steal a Brainrot</b>
+
+<br><br>
+
+❤️ Créditos a
+<b>SpiderSammy</b>,
+creador oficial de
+<b>Steal a Brainrot</b>.
+
+<br><br>
+
+🤖 Bot fundado en:
+
+<b>Ketchuru Community</b>
+
+<br><br>
+
+👨‍💻 Creado por:
+
+<b>Matias20241212</b>
+
+<br><br>
+
+💻 Hosteado por:
+
+<b>Matias20241212</b>
+
+<br><br>
+
+🚀 Gracias por utilizar
+<b>Ketchuru Bot</b>.
+
+</p>
+
+</div>
+
+</section>
+
+<footer>
+
+<div style="padding:40px;background:rgba(0,0,0,.75);text-align:center;">
+
+<h2 style="color:white;margin-bottom:15px;">
+
+🤖 Ketchuru Bot
+
+</h2>
+
+<p style="margin-bottom:10px;">
+
+Sistema de economía • Minijuegos • Inventario • Eventos • Comunidad
+
+</p>
+
+<p style="opacity:.7;">
+
+© 2026 Ketchuru Bot — Todos los derechos reservados.
+
+</p>
+
+</div>
+
+</footer>
+
+<script>
+
+const boton = document.querySelector(".menu-btn");
+
+const menu = document.querySelector("nav");
+
+
+boton.addEventListener("click",()=>{
+
+menu.classList.toggle("active");
+
+});
+
+
+</script>
+
+</body>
+<div class="menu-flotante">
+
+<a href="index.html">
+🏠 Inicio
+</a>
+
+<a href="pages/comandos.html">
+📜 Comandos
+</a>
+
+<a href="pages/dashboard.html">
+⚙️ Dashboard
+</a>
+
+</div>
+
+</html>
