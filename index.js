@@ -1,4 +1,4 @@
-const rankingAPI = require("./web/api/ranking");
+const rankingAPI = require("./Web/api/ranking.js");
 
 const express = require("express");
 const db = require("./database");
