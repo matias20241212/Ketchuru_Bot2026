@@ -15,11 +15,11 @@ app.use(express.json());
 // =========================
 
 // Servir todos los archivos de la carpeta web
-app.use(express.static(path.join(__dirname, "web")));
+app.use(express.static(path.join(__dirname, "Web")));
 
 // Abrir el dashboard directamente desde "/"
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "web/pages/dashboard.html"));
+    res.sendFile(path.join(__dirname, "Web/pages/dashboard.html"));
 });
 
 // API Ranking

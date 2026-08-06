@@ -1,44 +1,50 @@
-module.exports={
+module.exports = {
+    nombre: "deletecode",
 
-nombre:"deletecode",
+    async ejecutar(message, args, db) {
 
-
-async ejecutar(message,args,db){
-
-
-if(!message.member.permissions.has("Administrator"))
-return message.reply(
-"❌ Sin permisos."
-);
+        if (!message.member.permissions.has("Administrator")) {
+            return message.reply("❌ Sin permisos.");
+        }
 
 
-
-const codigo=args[0];
-
-
-if(!codigo)
-return message.reply(
-"❌ Usa: !deletecode CODIGO"
-);
+        const codigo = args[0];
 
 
+        if (!codigo) {
+            return message.reply(
+                "❌ Usa: `!deletecode CODIGO`"
+            );
+        }
 
-await db.query(
+
+        const resultado = await db.query(
+            `
+            DELETE FROM codes
+            WHERE code = $1
+            RETURNING code
+            `,
+            [codigo.toUpperCase()]
+        );
+
+
+        if (resultado.rowCount === 0) {
+            return message.reply(
+                "❌ Ese código no existe."
+            );
+        }
+
+
+        message.reply(
 `
-DELETE FROM codes
-WHERE code=$1
-`,
-[codigo.toUpperCase()]
-);
+🗑️ **Código eliminado**
 
+🎟️ Código:
+\`${resultado.rows[0].code}\`
 
+✅ Eliminado correctamente.
+`
+        );
 
-message.reply(
-`🗑️ Código eliminado: ${codigo}`
-);
-
-
-}
-
-
+    }
 };

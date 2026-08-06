@@ -1,31 +1,40 @@
 const redeemSystem = require("../../systems/redeem/redeemSystem");
 
-
 module.exports = {
+    nombre: "createcode",
 
-nombre:"createcode",
+    async ejecutar(message, args, db) {
 
-
-async ejecutar(message,args,db){
-
-
-if(!message.member.permissions.has("Administrator")){
-return message.reply(
-"❌ No tienes permisos."
-);
-}
+        if (!message.member.permissions.has("Administrator")) {
+            return message.reply("❌ No tienes permisos.");
+        }
 
 
-
-const resultado =
-await redeemSystem.crearCodigo(
-db,
-message.author.id
-);
+        const codigo = args[0];
+        const duracion = args[1];
 
 
+        if (!codigo || !duracion) {
+            return message.reply(
+                "❌ Uso correcto:\n" +
+                "`!createcode CODIGO DURACION`\n\n" +
+                "Ejemplos:\n" +
+                "`!createcode KETCHURU siempre`\n" +
+                "`!createcode FERIA2027 7d`\n" +
+                "`!createcode EVENTO 24h`"
+            );
+        }
 
-message.reply(
+
+        const resultado = await redeemSystem.crearCodigo(
+            db,
+            codigo.toUpperCase(),
+            duracion,
+            message.author.id
+        );
+
+
+        message.reply(
 `
 ✅ **Código creado**
 
@@ -35,13 +44,13 @@ message.reply(
 🪙 Recompensa:
 ${resultado.recompensa.toLocaleString()} monedas
 
+⏳ Duración:
+${duracion === "siempre" ? "♾️ Permanente" : duracion}
+
 📦 Usos:
-1
+0
 `
-);
+        );
 
-
-}
-
-
+    }
 };
