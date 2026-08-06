@@ -20,8 +20,8 @@ module.exports = {
 
         const resultado = await db.query(
             `
-            DELETE FROM codes
-            WHERE code = $1
+            DELETE FROM redeem_codes
+WHERE code=$1
             RETURNING code
             `,
             [codigo.toUpperCase()]
