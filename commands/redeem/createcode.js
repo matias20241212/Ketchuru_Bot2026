@@ -12,16 +12,16 @@ module.exports = {
 
         const codigo = args[0];
         const duracion = args[1];
+        const recompensa = Number(args[2]);
 
 
-        if (!codigo || !duracion) {
+        if (!codigo || !duracion || !recompensa) {
             return message.reply(
-                "❌ Uso correcto:\n" +
-                "`!createcode CODIGO DURACION`\n\n" +
+                "❌ Uso:\n" +
+                "`!createcode CODIGO DURACION RECOMPENSA`\n\n" +
                 "Ejemplos:\n" +
-                "`!createcode KETCHURU siempre`\n" +
-                "`!createcode FERIA2027 7d`\n" +
-                "`!createcode EVENTO 24h`"
+                "`!createcode KETCHURU siempre 500000`\n" +
+                "`!createcode FERIA2027 7d 1000000`"
             );
         }
 
@@ -30,6 +30,7 @@ module.exports = {
             db,
             codigo.toUpperCase(),
             duracion,
+            recompensa,
             message.author.id
         );
 
@@ -41,11 +42,11 @@ module.exports = {
 🎟️ Código:
 \`${resultado.codigo}\`
 
-🪙 Recompensa:
-${resultado.recompensa.toLocaleString()} monedas
-
 ⏳ Duración:
 ${duracion === "siempre" ? "♾️ Permanente" : duracion}
+
+🪙 Recompensa:
+${resultado.recompensa.toLocaleString()} monedas
 
 📦 Usos:
 0
@@ -53,4 +54,4 @@ ${duracion === "siempre" ? "♾️ Permanente" : duracion}
         );
 
     }
-};
+};  
