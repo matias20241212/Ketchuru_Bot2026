@@ -1,7 +1,6 @@
 const crypto = require("crypto");
 
 
-
 function generarCodigo(){
 
     return crypto
@@ -25,33 +24,93 @@ function generarRecompensa(){
 
 
 
-async function crearCodigo(db,usuario){
+function calcularExpiracion(duracion){
+
+    if(duracion === "siempre"){
+        return null;
+    }
 
 
-    let codigo;
-    let existe;
+    const numero = parseInt(duracion);
+
+    const tipo = duracion.slice(-1);
 
 
-    do {
-
-        codigo = generarCodigo();
+    const fecha = new Date();
 
 
-        existe = await db.query(
-            `
-            SELECT code
-            FROM redeem_codes
-            WHERE code=$1
-            `,
-            [codigo]
+    if(tipo === "h"){
+        fecha.setHours(
+            fecha.getHours() + numero
         );
+    }
 
 
-    }while(existe.rows.length > 0);
+    if(tipo === "d"){
+        fecha.setDate(
+            fecha.getDate() + numero
+        );
+    }
+
+
+    if(tipo === "m"){
+        fecha.setMonth(
+            fecha.getMonth() + numero
+        );
+    }
+
+
+    if(tipo === "y"){
+        fecha.setFullYear(
+            fecha.getFullYear() + numero
+        );
+    }
+
+
+    return fecha;
+
+}
 
 
 
-    const recompensa = generarRecompensa();
+async function crearCodigo(
+    db,
+    codigoPersonalizado,
+    duracion,
+    recompensa,
+    usuario
+){
+
+    let codigo = codigoPersonalizado;
+
+
+    if(!codigo){
+
+        let existe;
+
+
+        do {
+
+            codigo = generarCodigo();
+
+
+            existe = await db.query(
+                `
+                SELECT code
+                FROM redeem_codes
+                WHERE code=$1
+                `,
+                [codigo]
+            );
+
+
+        }while(existe.rows.length > 0);
+
+    }
+
+
+
+    const expiresAt = calcularExpiracion(duracion);
 
 
 
@@ -61,28 +120,30 @@ async function crearCodigo(db,usuario){
         (
         code,
         reward,
-        created_by
+        created_by,
+        expires_at
         )
 
         VALUES
-        ($1,$2,$3)
+        ($1,$2,$3,$4)
         `,
         [
-            codigo,
+            codigo.toUpperCase(),
             recompensa,
-            usuario
+            usuario,
+            expiresAt
         ]
     );
 
 
 
     return {
-        codigo,
-        recompensa
+        codigo: codigo.toUpperCase(),
+        recompensa,
+        expiresAt
     };
 
 }
-
 
 
 
