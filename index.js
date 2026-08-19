@@ -1,59 +1,31 @@
+// ============================================================
+// 🔐 ENV
+// ============================================================
+
+require("dotenv").config();
+
+// ============================================================
+// 📦 IMPORTACIONES
+// ============================================================
+
 const rankingAPI = require("./Web/api/ranking.js");
 
 const express = require("express");
 const db = require("./database");
-const app = express();
 const fs = require("fs");
 const path = require("path");
+const cron = require("node-cron");
 
 const {
     Client,
     GatewayIntentBits
 } = require("discord.js");
 
-const cron = require("node-cron");
-
-// ============================================================
-// 🤖 CLIENTE DISCORD
-// ============================================================
-
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers
-    ]
-});
-
-// ============================================================
-// 👋 BIENVENIDAS / DESPEDIDAS
-// ============================================================
-
-const {
-    bienvenida,
-    despedida
-} = require("./systems/bienvenidas/bienvenida");
-
-client.on("guildMemberAdd", async (member) => {
-    try {
-        await bienvenida(member);
-    } catch (error) {
-        console.error("❌ Error en bienvenida:", error);
-    }
-});
-
-client.on("guildMemberRemove", async (member) => {
-    try {
-        await despedida(member);
-    } catch (error) {
-        console.error("❌ Error en despedida:", error);
-    }
-});
-
 // ============================================================
 // 🌐 SERVIDOR WEB
 // ============================================================
+
+const app = express();
 
 const PORT = process.env.PORT || 3000;
 
@@ -85,13 +57,98 @@ app.listen(PORT, () => {
 });
 
 // ============================================================
+// 🤖 CLIENTE DISCORD
+// ============================================================
+
+const client = new Client({
+
+    // Un solo shard: Shard 0
+    shardCount: 1,
+    shards: [0],
+
+    intents: [
+
+        // Servidores
+        GatewayIntentBits.Guilds,
+
+        // Mensajes
+        GatewayIntentBits.GuildMessages,
+
+        // Leer contenido de mensajes
+        GatewayIntentBits.MessageContent,
+
+        // Entradas / salidas de miembros
+        GatewayIntentBits.GuildMembers
+
+    ]
+
+});
+
+// ============================================================
 // 📦 COMANDOS
 // ============================================================
 
 require("./handlers/comandos")(client);
 
 // ============================================================
-// 🎒 INVENTARIO PRO
+// 👋 BIENVENIDAS / DESPEDIDAS
+// ============================================================
+
+const {
+    bienvenida,
+    despedida
+} = require("./systems/bienvenidas/bienvenida");
+
+client.on(
+    "guildMemberAdd",
+    async (member) => {
+
+        try {
+
+            console.log(
+                `👋 NUEVO MIEMBRO: ${member.user.tag}`
+            );
+
+            await bienvenida(member);
+
+        } catch (error) {
+
+            console.error(
+                "❌ Error en bienvenida:",
+                error
+            );
+
+        }
+
+    }
+);
+
+client.on(
+    "guildMemberRemove",
+    async (member) => {
+
+        try {
+
+            console.log(
+                `👋 MIEMBRO SALIÓ: ${member.user.tag}`
+            );
+
+            await despedida(member);
+
+        } catch (error) {
+
+            console.error(
+                "❌ Error en despedida:",
+                error
+            );
+
+        }
+
+    }
+);
+
+// ============================================================
+// 🎒 INVENTARIO
 // ============================================================
 
 let inventory = {};
@@ -102,26 +159,39 @@ const inventoryFile = path.join(
     "inventory.json"
 );
 
-if (fs.existsSync(inventoryFile)) {
+if (
+    fs.existsSync(
+        inventoryFile
+    )
+) {
+
     try {
-        inventory = JSON.parse(
-            fs.readFileSync(
-                inventoryFile,
-                "utf8"
-            )
-        );
+
+        inventory =
+            JSON.parse(
+                fs.readFileSync(
+                    inventoryFile,
+                    "utf8"
+                )
+            );
+
     } catch (error) {
+
         console.error(
             "❌ Error cargando inventory.json:",
             error
         );
 
         inventory = {};
+
     }
+
 }
 
 async function saveInventory() {
+
     try {
+
         await fs.promises.writeFile(
             inventoryFile,
             JSON.stringify(
@@ -130,56 +200,17 @@ async function saveInventory() {
                 2
             )
         );
+
     } catch (error) {
+
         console.error(
             "❌ Error guardando inventario:",
             error
         );
+
     }
+
 }
-
-// ============================================================
-// 🚨 ERRORES Y ESTADO DE DISCORD
-// ============================================================
-
-client.on("error", (error) => {
-    console.error(
-        "❌ ERROR DEL CLIENTE DISCORD:",
-        error
-    );
-});
-
-client.on("warn", (warning) => {
-    console.warn(
-        "⚠️ ADVERTENCIA DISCORD:",
-        warning
-    );
-});
-
-client.on("shardError", (error) => {
-    console.error(
-        "❌ ERROR DEL GATEWAY DE DISCORD:",
-        error
-    );
-});
-
-client.on("shardDisconnect", (event, shardId) => {
-    console.error(
-        `🔴 GATEWAY DESCONECTADO | Shard ${shardId} | Código: ${event.code}`
-    );
-});
-
-client.on("shardReconnecting", (shardId) => {
-    console.warn(
-        `🔄 RECONEXIÓN AL GATEWAY | Shard ${shardId}`
-    );
-});
-
-client.on("shardReady", (shardId) => {
-    console.log(
-        `🟢 SHARD CONECTADO | Shard ${shardId}`
-    );
-});
 
 // ============================================================
 // 📦 SISTEMAS
@@ -196,9 +227,6 @@ const {
     avanzarMision
 } = require("./systems/missionProgress");
 
-const marketReviews =
-    require("./systems/market/marketReviews");
-
 const giftButtons =
     require("./systems/gifts/giftButtons");
 
@@ -210,14 +238,22 @@ const giftSystem =
 // ============================================================
 
 function getChileDate() {
+
     const formatter =
         new Intl.DateTimeFormat(
             "en-US",
             {
-                timeZone: "America/Santiago",
-                weekday: "short",
-                hour: "numeric",
-                hour12: false
+                timeZone:
+                    "America/Santiago",
+
+                weekday:
+                    "short",
+
+                hour:
+                    "numeric",
+
+                hour12:
+                    false
             }
         );
 
@@ -229,22 +265,27 @@ function getChileDate() {
     const weekday =
         parts.find(
             part =>
-                part.type === "weekday"
+                part.type ===
+                "weekday"
         )?.value;
 
     let hour =
         Number(
             parts.find(
                 part =>
-                    part.type === "hour"
+                    part.type ===
+                    "hour"
             )?.value
         );
 
-    if (hour === 24) {
+    if (
+        hour === 24
+    ) {
         hour = 0;
     }
 
     const days = {
+
         Sun: 0,
         Mon: 1,
         Tue: 2,
@@ -252,12 +293,18 @@ function getChileDate() {
         Thu: 4,
         Fri: 5,
         Sat: 6
+
     };
 
     return {
-        day: days[weekday],
+
+        day:
+            days[weekday],
+
         hour
+
     };
+
 }
 
 // ============================================================
@@ -265,213 +312,345 @@ function getChileDate() {
 // ============================================================
 
 function getAdminAbuseTime() {
+
     return {
+
         saturday: 15,
         tuesday: 20
+
     };
+
 }
+
+// ============================================================
+// 🚨 EVENTOS DE DISCORD
+// ============================================================
+
+client.on(
+    "debug",
+    (info) => {
+
+        console.log(
+            "🔎 DISCORD DEBUG:",
+            info
+        );
+
+    }
+);
+
+client.on(
+    "warn",
+    (warning) => {
+
+        console.warn(
+            "⚠️ DISCORD WARN:",
+            warning
+        );
+
+    }
+);
+
+client.on(
+    "error",
+    (error) => {
+
+        console.error(
+            "❌ ERROR DEL CLIENTE DISCORD:",
+            error
+        );
+
+    }
+);
+
+client.on(
+    "shardError",
+    (error, shardId) => {
+
+        console.error(
+            `❌ ERROR DEL GATEWAY | SHARD ${shardId}:`,
+            error
+        );
+
+    }
+);
+
+client.on(
+    "shardDisconnect",
+    (event, shardId) => {
+
+        console.error(
+            `🔴 GATEWAY DESCONECTADO | SHARD ${shardId} | CÓDIGO: ${event.code}`
+        );
+
+    }
+);
+
+client.on(
+    "shardReconnecting",
+    (shardId) => {
+
+        console.warn(
+            `🔄 RECONEXIÓN AL GATEWAY | SHARD ${shardId}`
+        );
+
+    }
+);
+
+client.on(
+    "shardReady",
+    (shardId) => {
+
+        console.log(
+            `🟢 SHARD ${shardId} CONECTADO CORRECTAMENTE`
+        );
+
+    }
+);
+
+client.on(
+    "invalidated",
+    () => {
+
+        console.error(
+            "❌ SESIÓN DE DISCORD INVALIDADA"
+        );
+
+    }
+);
 
 // ============================================================
 // 🟢 BOT CONECTADO
 // ============================================================
 
-client.once("clientReady", () => {
+client.once(
+    "clientReady",
+    () => {
 
-    console.log(
-        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    );
+        console.log(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
 
-    console.log(
-        `✅ KETCHURUBOT CONECTADO COMO: ${client.user.tag}`
-    );
+        console.log(
+            `✅ KETCHURUBOT CONECTADO COMO: ${client.user.tag}`
+        );
 
-    console.log(
-        `🆔 ID DEL BOT: ${client.user.id}`
-    );
+        console.log(
+            `🆔 ID DEL BOT: ${client.user.id}`
+        );
 
-    console.log(
-        `🏠 SERVIDORES: ${client.guilds.cache.size}`
-    );
+        console.log(
+            `🏠 SERVIDORES: ${client.guilds.cache.size}`
+        );
 
-    console.log(
-        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    );
+        console.log(
+            `🧩 SHARD ACTIVO: ${client.shard?.ids?.join(", ") ?? "0"}`
+        );
 
-    // ========================================================
-    // 🛒 SHOP RESTOCK
-    // ========================================================
+        console.log(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
 
-    setInterval(
-        () => {
+        // ====================================================
+        // 🛒 SHOP RESTOCK
+        // ====================================================
 
-            try {
+        setInterval(
+            () => {
 
-                const {
-                    day,
-                    hour
-                } = getChileDate();
+                try {
 
-                let shouldRestock = false;
+                    const {
+                        day,
+                        hour
+                    } =
+                        getChileDate();
 
-                // 🟡 LUNES - JUEVES
-                if (
-                    day >= 1 &&
-                    day <= 4 &&
-                    hour === 20
-                ) {
-                    shouldRestock = true;
-                }
+                    let shouldRestock =
+                        false;
 
-                // 🔵 VIERNES
-                if (
-                    day === 5 &&
-                    (
-                        hour === 8 ||
+                    // 🟡 LUNES - JUEVES
+                    if (
+                        day >= 1 &&
+                        day <= 4 &&
                         hour === 20
-                    )
-                ) {
-                    shouldRestock = true;
-                }
+                    ) {
 
-                // 🔴 SÁBADO
-                if (
-                    day === 6 &&
-                    hour % 6 === 0
-                ) {
-                    shouldRestock = true;
-                }
+                        shouldRestock =
+                            true;
 
-                // 🟢 DOMINGO
-                if (
-                    day === 0 &&
-                    (
-                        hour === 8 ||
-                        hour === 20
-                    )
-                ) {
-                    shouldRestock = true;
-                }
+                    }
 
-                if (shouldRestock) {
+                    // 🔵 VIERNES
+                    if (
+                        day === 5 &&
+                        (
+                            hour === 8 ||
+                            hour === 20
+                        )
+                    ) {
 
-                    restockShop();
+                        shouldRestock =
+                            true;
 
-                    console.log(
-                        "🛒 HAMMER TIME RESTOCK"
+                    }
+
+                    // 🔴 SÁBADO
+                    if (
+                        day === 6 &&
+                        hour % 6 === 0
+                    ) {
+
+                        shouldRestock =
+                            true;
+
+                    }
+
+                    // 🟢 DOMINGO
+                    if (
+                        day === 0 &&
+                        (
+                            hour === 8 ||
+                            hour === 20
+                        )
+                    ) {
+
+                        shouldRestock =
+                            true;
+
+                    }
+
+                    if (
+                        shouldRestock
+                    ) {
+
+                        restockShop();
+
+                        console.log(
+                            "🛒 HAMMER TIME RESTOCK"
+                        );
+
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ Error en restock:",
+                        error
                     );
 
                 }
 
-            } catch (error) {
+            },
 
-                console.error(
-                    "❌ Error en restock:",
-                    error
-                );
+            60 *
+            60 *
+            1000
+
+        );
+
+        // ====================================================
+        // 👇 ADMIN ABUSE
+        // ====================================================
+
+        cron.schedule(
+            "0 * * * *",
+            async () => {
+
+                try {
+
+                    const channel =
+                        client.channels.cache.get(
+                            "1512250127518011613"
+                        );
+
+                    if (
+                        !channel
+                    ) {
+                        return;
+                    }
+
+                    const {
+                        saturday,
+                        tuesday
+                    } =
+                        getAdminAbuseTime();
+
+                    const now =
+                        new Date();
+
+                    const day =
+                        now.getUTCDay();
+
+                    const hour =
+                        now.getUTCHours();
+
+                    // SÁBADO - 12 HORAS ANTES
+                    if (
+                        day === 6 &&
+                        hour ===
+                        saturday - 12
+                    ) {
+
+                        await channel.send(
+                            "⏰ 12 HORAS PARA ADMIN ABUSE (sábado) - 15:00 UTC"
+                        );
+
+                    }
+
+                    // MARTES - 12 HORAS ANTES
+                    if (
+                        day === 2 &&
+                        hour ===
+                        tuesday - 12
+                    ) {
+
+                        await channel.send(
+                            "⏰ 12 HORAS PARA ADMIN ABUSE (martes) - 20:00 UTC"
+                        );
+
+                    }
+
+                    // SÁBADO - INICIO
+                    if (
+                        day === 6 &&
+                        hour === saturday
+                    ) {
+
+                        await channel.send(
+                            "🔥 ADMIN ABUSE INICIADO (sábado) 15:00 UTC (Hammer time)"
+                        );
+
+                    }
+
+                    // MARTES - INICIO
+                    if (
+                        day === 2 &&
+                        hour === tuesday
+                    ) {
+
+                        await channel.send(
+                            "🔥 ADMIN ABUSE INICIADO (martes) 20:00 UTC (Hammer time)"
+                        );
+
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ Error en Admin Abuse:",
+                        error
+                    );
+
+                }
 
             }
+        );
 
-        },
-        60 * 60 * 1000
-    );
-
-    // ========================================================
-    // 👇 ADMIN ABUSE
-    // ========================================================
-
-    cron.schedule(
-        "0 * * * *",
-        async () => {
-
-            try {
-
-                const channel =
-                    client.channels.cache.get(
-                        "1512250127518011613"
-                    );
-
-                if (!channel) {
-                    return;
-                }
-
-                const {
-                    saturday,
-                    tuesday
-                } = getAdminAbuseTime();
-
-                const now =
-                    new Date();
-
-                const day =
-                    now.getUTCDay();
-
-                const hour =
-                    now.getUTCHours();
-
-                // SÁBADO - 12 HORAS ANTES
-                if (
-                    day === 6 &&
-                    hour === saturday - 12
-                ) {
-
-                    await channel.send(
-                        `⏰ 12 HORAS PARA ADMIN ABUSE (sábado) - ${saturday}:00 UTC`
-                    );
-
-                }
-
-                // MARTES - 12 HORAS ANTES
-                if (
-                    day === 2 &&
-                    hour === tuesday - 12
-                ) {
-
-                    await channel.send(
-                        `⏰ 12 HORAS PARA ADMIN ABUSE (martes) - ${tuesday}:00 UTC`
-                    );
-
-                }
-
-                // SÁBADO - INICIO
-                if (
-                    day === 6 &&
-                    hour === saturday
-                ) {
-
-                    await channel.send(
-                        `🔥 ADMIN ABUSE INICIADO (sábado) ${saturday}:00 UTC (Hammer time)`
-                    );
-
-                }
-
-                // MARTES - INICIO
-                if (
-                    day === 2 &&
-                    hour === tuesday
-                ) {
-
-                    await channel.send(
-                        `🔥 ADMIN ABUSE INICIADO (martes) ${tuesday}:00 UTC (Hammer time)`
-                    );
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "❌ Error en Admin Abuse:",
-                    error
-                );
-
-            }
-
-        }
-    );
-
-});
+    }
+);
 
 // ============================================================
-// 💬 MENSAJES + COMANDOS + ECONOMÍA
+// 💬 MENSAJES
 // ============================================================
 
 const mensajes =
@@ -486,20 +665,14 @@ client.on(
 
         try {
 
-            // =================================================
-            // 🚫 IGNORAR BOTS
-            // =================================================
-
+            // IGNORAR BOTS
             if (
                 message.author.bot
             ) {
                 return;
             }
 
-            // =================================================
-            // 🚫 IGNORAR MENSAJES PRIVADOS
-            // =================================================
-
+            // IGNORAR PRIVADOS
             if (
                 !message.guild
             ) {
@@ -625,7 +798,9 @@ client.on(
                         commandName
                     );
 
-                if (command) {
+                if (
+                    command
+                ) {
 
                     console.log(
                         `⚡ Ejecutando comando: !${commandName}`
@@ -645,6 +820,7 @@ client.on(
                         );
 
                         return;
+
                     }
 
                     return ejecutar(
@@ -859,7 +1035,7 @@ client.on(
 );
 
 // ============================================================
-// 🎁 SISTEMAS DE INTERACCIONES
+// 🎁 INTERACCIONES
 // ============================================================
 
 client.on(
@@ -877,23 +1053,29 @@ client.on(
             ) {
 
                 // =================================================
-                // 🎪 BOTONES DE FERIA
+                // 🎪 FERIA
                 // =================================================
 
                 if (
+
                     interaction.customId ===
                         "confirmar_createferia" ||
+
                     interaction.customId ===
                         "cancelar_createferia" ||
+
                     interaction.customId.startsWith(
                         "feria_comprar_"
                     ) ||
+
                     interaction.customId.startsWith(
                         "feria_poder_"
                     ) ||
+
                     interaction.customId.startsWith(
                         "feria_cancelar_"
                     )
+
                 ) {
 
                     return feriaButtons(
@@ -942,7 +1124,8 @@ client.on(
                                 {
                                     content:
                                         "❌ No se pudieron cargar los regalos.",
-                                    ephemeral: true
+                                    ephemeral:
+                                        true
                                 }
                             );
 
@@ -992,7 +1175,8 @@ client.on(
                                 {
                                     content:
                                         "❌ No se pudieron cargar los regalos.",
-                                    ephemeral: true
+                                    ephemeral:
+                                        true
                                 }
                             );
 
@@ -1003,7 +1187,7 @@ client.on(
                 }
 
                 // =================================================
-                // ⭐ REPUTACIÓN PERSA
+                // ⭐ REPUTACIÓN
                 // =================================================
 
                 if (
@@ -1022,7 +1206,8 @@ client.on(
                         {
                             content:
                                 `⭐ Elegiste ${estrellas} estrellas.\n\nAhora escribe tu comentario.`,
-                            ephemeral: true
+                            ephemeral:
+                                true
                         }
                     );
 
@@ -1064,7 +1249,8 @@ client.on(
                             {
                                 content:
                                     "⚠️ Este inventario no es tuyo.",
-                                ephemeral: true
+                                ephemeral:
+                                    true
                             }
                         );
 
@@ -1093,7 +1279,8 @@ client.on(
 
                     await interaction.deferReply(
                         {
-                            ephemeral: true
+                            ephemeral:
+                                true
                         }
                     );
 
@@ -1120,7 +1307,8 @@ client.on(
                             {
                                 content:
                                     "❌ No existe ese objeto.",
-                                components: []
+                                components:
+                                    []
                             }
                         );
 
@@ -1137,7 +1325,8 @@ client.on(
                         interaction.user.id,
                         {
                             ownerId,
-                            item: objeto.item
+                            item:
+                                objeto.item
                         }
                     );
 
@@ -1207,16 +1396,14 @@ ${objeto.amount}
                             {
                                 content:
                                     "⚠️ Inventario cerrado.",
-                                ephemeral: true
+                                ephemeral:
+                                    true
                             }
                         );
 
                     }
 
-                    // =================================================
-                    // ❌ CANCELAR
-                    // =================================================
-
+                    // CANCELAR
                     if (
                         accion ===
                         "cancel"
@@ -1226,31 +1413,28 @@ ${objeto.amount}
                             {
                                 content:
                                     "❌ Acción cancelada.",
-                                components: []
+                                components:
+                                    []
                             }
                         );
 
                     }
 
-                    let cantidad = 1;
+                    let cantidad =
+                        1;
 
-                    // =================================================
                     // 3 ITEMS
-                    // =================================================
-
                     if (
                         accion ===
                         "three"
                     ) {
 
-                        cantidad = 3;
+                        cantidad =
+                            3;
 
                     }
 
-                    // =================================================
-                    // 🔢 CANTIDAD PERSONALIZADA
-                    // =================================================
-
+                    // PERSONALIZADO
                     if (
                         accion ===
                         "custom"
@@ -1305,7 +1489,8 @@ ${objeto.amount}
 
                     await interaction.deferReply(
                         {
-                            ephemeral: true
+                            ephemeral:
+                                true
                         }
                     );
 
@@ -1374,7 +1559,8 @@ ${objeto.amount}
                         {
                             content:
                                 "❌ Cantidad inválida",
-                            ephemeral: true
+                            ephemeral:
+                                true
                         }
                     );
 
@@ -1393,7 +1579,8 @@ ${objeto.amount}
                         {
                             content:
                                 "⚠️ Inventario cerrado.",
-                            ephemeral: true
+                            ephemeral:
+                                true
                         }
                     );
 
@@ -1401,7 +1588,8 @@ ${objeto.amount}
 
                 await interaction.deferReply(
                     {
-                        ephemeral: true
+                        ephemeral:
+                            true
                     }
                 );
 
@@ -1448,7 +1636,8 @@ ${objeto.amount}
                         {
                             content:
                                 "❌ Ocurrió un error procesando esta interacción.",
-                            ephemeral: true
+                            ephemeral:
+                                true
                         }
                     );
 
@@ -1472,39 +1661,63 @@ ${objeto.amount}
 // 🔑 LOGIN DISCORD
 // ============================================================
 
-if (!process.env.TOKEN) {
-
-    console.error(
-        "❌ ERROR CRÍTICO: No existe la variable de entorno TOKEN."
-    );
-
-    process.exit(1);
-}
+console.log(
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+);
 
 console.log(
-    "🔑 Token de Discord detectado correctamente."
+    "🔑 Token de Discord:",
+    process.env.TOKEN
+        ? "DETECTADO"
+        : "❌ NO DETECTADO"
+);
+
+console.log(
+    "🧩 Shard configurado: 0"
 );
 
 console.log(
     "🔌 Intentando conectar con Discord Gateway..."
 );
 
-client.login(process.env.TOKEN)
-    .then(() => {
+console.log(
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+);
+
+if (
+    !process.env.TOKEN
+) {
+
+    console.error(
+        "❌ ERROR CRÍTICO: TOKEN NO ENCONTRADO."
+    );
+
+    process.exit(1);
+
+}
+
+client.login(
+    process.env.TOKEN
+)
+.then(
+    () => {
 
         console.log(
-            "🔐 client.login() terminó correctamente."
+            "🔐 client.login() ejecutado correctamente."
         );
 
-    })
-    .catch((error) => {
+    }
+)
+.catch(
+    (error) => {
 
         console.error(
-            "❌ ERROR AL INICIAR DISCORD:"
+            "❌❌❌ ERROR AL INICIAR DISCORD ❌❌❌"
         );
 
         console.error(
             error
         );
 
-    });
+    }
+);
