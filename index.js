@@ -1433,21 +1433,14 @@ ${objeto.amount}
 // 🔑 LOGIN
 // ============================================================
 
-client.login(
-    process.env.TOKEN
-)
-.then(
-    () => {
-        console.log(
-            "🔐 Login de Discord iniciado correctamente."
-        );
-    }
-)
-.catch(
-    (error) => {
-        console.error(
-            "❌ ERROR AL INICIAR DISCORD:",
-            error
-        );
-    }
-);
+client.once("clientReady", () => {
+    console.log(`✅ KETCHURUBOT CONECTADO COMO: ${client.user.tag}`);
+});
+
+client.login(process.env.TOKEN)
+    .then(() => {
+        console.log("🔐 client.login() terminó correctamente.");
+    })
+    .catch((error) => {
+        console.error("❌ ERROR AL INICIAR DISCORD:", error);
+    });
