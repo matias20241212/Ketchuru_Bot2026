@@ -13,11 +13,49 @@ const {
 
 const cron = require("node-cron");
 
-const PORT = process.env.PORT || 3000;
+// ============================================================
+// 🤖 CLIENTE DISCORD
+// ============================================================
+
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers
+    ]
+});
+
+// ============================================================
+// 👋 BIENVENIDAS / DESPEDIDAS
+// ============================================================
+
+const {
+    bienvenida,
+    despedida
+} = require("./systems/bienvenidas/bienvenida");
+
+client.on("guildMemberAdd", async (member) => {
+    try {
+        await bienvenida(member);
+    } catch (error) {
+        console.error("❌ Error en bienvenida:", error);
+    }
+});
+
+client.on("guildMemberRemove", async (member) => {
+    try {
+        await despedida(member);
+    } catch (error) {
+        console.error("❌ Error en despedida:", error);
+    }
+});
 
 // ============================================================
 // 🌐 SERVIDOR WEB
 // ============================================================
+
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
@@ -28,38 +66,22 @@ app.use(
 );
 
 app.get("/", (req, res) => {
-
     res.sendFile(
         path.join(
             __dirname,
-            "Web/pages/dashboard.html"
+            "Web",
+            "pages",
+            "dashboard.html"
         )
     );
-
 });
 
 app.use("/api", rankingAPI);
 
 app.listen(PORT, () => {
-
     console.log(
         `🌐 Servidor iniciado en el puerto ${PORT}`
     );
-
-});
-
-// ============================================================
-// 🤖 CLIENTE DISCORD
-// ============================================================
-
-const client = new Client({
-
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-    ]
-
 });
 
 // ============================================================
@@ -81,33 +103,25 @@ const inventoryFile = path.join(
 );
 
 if (fs.existsSync(inventoryFile)) {
-
     try {
-
         inventory = JSON.parse(
             fs.readFileSync(
                 inventoryFile,
                 "utf8"
             )
         );
-
     } catch (error) {
-
         console.error(
             "❌ Error cargando inventory.json:",
             error
         );
 
         inventory = {};
-
     }
-
 }
 
 async function saveInventory() {
-
     try {
-
         await fs.promises.writeFile(
             inventoryFile,
             JSON.stringify(
@@ -116,16 +130,12 @@ async function saveInventory() {
                 2
             )
         );
-
     } catch (error) {
-
         console.error(
             "❌ Error guardando inventario:",
             error
         );
-
     }
-
 }
 
 // ============================================================
@@ -150,8 +160,9 @@ client.on(
 // ============================================================
 // 📦 SISTEMAS
 // ============================================================
+
 const feriaButtons =
-require("./handlers/buttons");
+    require("./handlers/buttons");
 
 const {
     restockShop
@@ -175,7 +186,6 @@ const giftSystem =
 // ============================================================
 
 function getChileDate() {
-
     const formatter =
         new Intl.DateTimeFormat(
             "en-US",
@@ -211,7 +221,6 @@ function getChileDate() {
     }
 
     const days = {
-
         Sun: 0,
         Mon: 1,
         Tue: 2,
@@ -219,16 +228,23 @@ function getChileDate() {
         Thu: 4,
         Fri: 5,
         Sat: 6
-
     };
 
     return {
-
         day: days[weekday],
         hour
-
     };
+}
 
+// ============================================================
+// 👇 ADMIN ABUSE
+// ============================================================
+
+function getAdminAbuseTime() {
+    return {
+        saturday: 15,
+        tuesday: 20
+    };
 }
 
 // ============================================================
@@ -260,19 +276,15 @@ client.once(
                     let shouldRestock = false;
 
                     // 🟡 LUNES - JUEVES
-
                     if (
                         day >= 1 &&
                         day <= 4 &&
                         hour === 20
                     ) {
-
                         shouldRestock = true;
-
                     }
 
                     // 🔵 VIERNES
-
                     if (
                         day === 5 &&
                         (
@@ -280,27 +292,18 @@ client.once(
                             hour === 20
                         )
                     ) {
-
                         shouldRestock = true;
-
                     }
 
                     // 🔴 SÁBADO
-
                     if (
                         day === 6 &&
-                        (
-                            hour % 6 === 0 ||
-                            hour === 20
-                        )
+                        hour % 6 === 0
                     ) {
-
                         shouldRestock = true;
-
                     }
 
                     // 🟢 DOMINGO
-
                     if (
                         day === 0 &&
                         (
@@ -308,9 +311,7 @@ client.once(
                             hour === 20
                         )
                     ) {
-
                         shouldRestock = true;
-
                     }
 
                     if (shouldRestock) {
@@ -340,17 +341,6 @@ client.once(
         // 👇 ADMIN ABUSE
         // ====================================================
 
-        function getAdminAbuseTime() {
-
-            return {
-
-                saturday: 15,
-                tuesday: 20
-
-            };
-
-        }
-
         cron.schedule(
             "0 * * * *",
             async () => {
@@ -369,8 +359,7 @@ client.once(
                     const {
                         saturday,
                         tuesday
-                    } =
-                        getAdminAbuseTime();
+                    } = getAdminAbuseTime();
 
                     const now =
                         new Date();
@@ -382,7 +371,6 @@ client.once(
                         now.getUTCHours();
 
                     // SÁBADO - 12 HORAS ANTES
-
                     if (
                         day === 6 &&
                         hour === saturday - 12
@@ -395,7 +383,6 @@ client.once(
                     }
 
                     // MARTES - 12 HORAS ANTES
-
                     if (
                         day === 2 &&
                         hour === tuesday - 12
@@ -408,7 +395,6 @@ client.once(
                     }
 
                     // SÁBADO - INICIO
-
                     if (
                         day === 6 &&
                         hour === saturday
@@ -421,7 +407,6 @@ client.once(
                     }
 
                     // MARTES - INICIO
-
                     if (
                         day === 2 &&
                         hour === tuesday
@@ -471,9 +456,7 @@ client.on(
             if (
                 message.author.bot
             ) {
-
                 return;
-
             }
 
             // =================================================
@@ -483,9 +466,7 @@ client.on(
             if (
                 !message.guild
             ) {
-
                 return;
-
             }
 
             const guildId =
@@ -505,7 +486,6 @@ client.on(
                     balance
                 )
                 VALUES ($1, $2)
-
                 ON CONFLICT (discord_id)
                 DO NOTHING
                 `,
@@ -524,9 +504,7 @@ client.on(
                 await db.query(
                     `
                     UPDATE daily_stats
-
                     SET active_today = true
-
                     WHERE discord_id = $1
                     `,
                     [
@@ -606,7 +584,7 @@ client.on(
                         .toLowerCase();
 
                 const command =
-                    client.commands.get(
+                    client.commands?.get(
                         commandName
                     );
 
@@ -630,7 +608,6 @@ client.on(
                         );
 
                         return;
-
                     }
 
                     return ejecutar(
@@ -669,12 +646,9 @@ client.on(
                 statsServidor.set(
                     guildId,
                     {
-
                         total: 0,
-
                         firstMessageTime:
                             Date.now()
-
                     }
                 );
 
@@ -864,21 +838,32 @@ client.on(
             if (
                 interaction.isButton()
             ) {
+
                 // =================================================
-// 🎪 BOTONES DE FERIA
-// =================================================
+                // 🎪 BOTONES DE FERIA
+                // =================================================
 
-if (
-    interaction.customId === "confirmar_createferia" ||
-    interaction.customId === "cancelar_createferia" ||
-    interaction.customId.startsWith("feria_comprar_") ||
-    interaction.customId.startsWith("feria_poder_") ||
-    interaction.customId.startsWith("feria_cancelar_")
-) {
+                if (
+                    interaction.customId ===
+                        "confirmar_createferia" ||
+                    interaction.customId ===
+                        "cancelar_createferia" ||
+                    interaction.customId.startsWith(
+                        "feria_comprar_"
+                    ) ||
+                    interaction.customId.startsWith(
+                        "feria_poder_"
+                    ) ||
+                    interaction.customId.startsWith(
+                        "feria_cancelar_"
+                    )
+                ) {
 
-    return feriaButtons(interaction);
+                    return feriaButtons(
+                        interaction
+                    );
 
-}
+                }
 
                 // =================================================
                 // 🎁 ACEPTAR REGALO
@@ -918,12 +903,9 @@ if (
 
                             return interaction.reply(
                                 {
-
                                     content:
                                         "❌ No se pudieron cargar los regalos.",
-
                                     ephemeral: true
-
                                 }
                             );
 
@@ -971,12 +953,9 @@ if (
 
                             return interaction.reply(
                                 {
-
                                     content:
                                         "❌ No se pudieron cargar los regalos.",
-
                                     ephemeral: true
-
                                 }
                             );
 
@@ -991,10 +970,9 @@ if (
                 // =================================================
 
                 if (
-                    interaction.customId
-                        .startsWith(
-                            "review_"
-                        )
+                    interaction.customId.startsWith(
+                        "review_"
+                    )
                 ) {
 
                     const estrellas =
@@ -1005,12 +983,9 @@ if (
 
                     return interaction.reply(
                         {
-
                             content:
                                 `⭐ Elegiste ${estrellas} estrellas.\n\nAhora escribe tu comentario.`,
-
                             ephemeral: true
-
                         }
                     );
 
@@ -1021,10 +996,9 @@ if (
                 // =================================================
 
                 if (
-                    interaction.customId
-                        .startsWith(
-                            "inv_item"
-                        )
+                    interaction.customId.startsWith(
+                        "inv_item"
+                    )
                 ) {
 
                     const data =
@@ -1051,12 +1025,9 @@ if (
 
                         return interaction.reply(
                             {
-
                                 content:
                                     "⚠️ Este inventario no es tuyo.",
-
                                 ephemeral: true
-
                             }
                         );
 
@@ -1110,12 +1081,9 @@ if (
 
                         return interaction.editReply(
                             {
-
                                 content:
                                     "❌ No existe ese objeto.",
-
                                 components: []
-
                             }
                         );
 
@@ -1131,16 +1099,13 @@ if (
                     setInventoryState(
                         interaction.user.id,
                         {
-
                             ownerId,
                             item: objeto.item
-
                         }
                     );
 
                     return interaction.editReply(
                         {
-
                             content:
                                 `
 🎒 **Objeto seleccionado**
@@ -1152,12 +1117,10 @@ ${objeto.amount}
 
 ¿Cuántos quieres usar?
 `,
-
                             components:
                                 createUseMenu(
                                     objeto.item
                                 )
-
                         }
                     );
 
@@ -1168,10 +1131,9 @@ ${objeto.amount}
                 // =================================================
 
                 if (
-                    interaction.customId
-                        .startsWith(
-                            "use_"
-                        )
+                    interaction.customId.startsWith(
+                        "use_"
+                    )
                 ) {
 
                     const data =
@@ -1206,12 +1168,9 @@ ${objeto.amount}
 
                         return interaction.reply(
                             {
-
                                 content:
                                     "⚠️ Inventario cerrado.",
-
                                 ephemeral: true
-
                             }
                         );
 
@@ -1228,12 +1187,9 @@ ${objeto.amount}
 
                         return interaction.update(
                             {
-
                                 content:
                                     "❌ Acción cancelada.",
-
                                 components: []
-
                             }
                         );
 
@@ -1298,12 +1254,10 @@ ${objeto.amount}
                                 );
 
                         modal.addComponents(
-
                             new ActionRowBuilder()
                                 .addComponents(
                                     input
                                 )
-
                         );
 
                         return interaction.showModal(
@@ -1326,10 +1280,8 @@ ${objeto.amount}
 
                     return interaction.editReply(
                         {
-
                             content:
                                 `✔ Usaste **${cantidad}x ${state.item}**`
-
                         }
                     );
 
@@ -1383,12 +1335,9 @@ ${objeto.amount}
 
                     return interaction.reply(
                         {
-
                             content:
                                 "❌ Cantidad inválida",
-
                             ephemeral: true
-
                         }
                     );
 
@@ -1405,12 +1354,9 @@ ${objeto.amount}
 
                     return interaction.reply(
                         {
-
                             content:
                                 "⚠️ Inventario cerrado.",
-
                             ephemeral: true
-
                         }
                     );
 
@@ -1430,10 +1376,8 @@ ${objeto.amount}
 
                 return interaction.editReply(
                     {
-
                         content:
                             `✔ Usaste **${cantidad}x ${state.item}**`
-
                     }
                 );
 
@@ -1454,10 +1398,8 @@ ${objeto.amount}
 
                     await interaction.editReply(
                         {
-
                             content:
                                 "❌ Ocurrió un error procesando esta interacción."
-
                         }
                     );
 
@@ -1467,12 +1409,9 @@ ${objeto.amount}
 
                     await interaction.reply(
                         {
-
                             content:
                                 "❌ Ocurrió un error procesando esta interacción.",
-
                             ephemeral: true
-
                         }
                     );
 
@@ -1501,20 +1440,16 @@ client.login(
 )
 .then(
     () => {
-
         console.log(
             "🔐 Login de Discord iniciado correctamente."
         );
-
     }
 )
 .catch(
     (error) => {
-
         console.error(
             "❌ ERROR AL INICIAR DISCORD:",
             error
         );
-
     }
 );
