@@ -251,9 +251,7 @@ function getAdminAbuseTime() {
 // READY
 // ============================================================
 
-client.once(
-    "ready",
-    () => {
+client.once("clientReady", () => {
 
         console.log(
             `✅ Conectado como ${client.user.tag}`
