@@ -139,23 +139,47 @@ async function saveInventory() {
 }
 
 // ============================================================
-// 🔎 DEBUG
+// 🚨 ERRORES Y ESTADO DE DISCORD
 // ============================================================
 
-client.on(
-    "debug",
-    console.log
-);
+client.on("error", (error) => {
+    console.error(
+        "❌ ERROR DEL CLIENTE DISCORD:",
+        error
+    );
+});
 
-client.on(
-    "error",
-    console.error
-);
+client.on("warn", (warning) => {
+    console.warn(
+        "⚠️ ADVERTENCIA DISCORD:",
+        warning
+    );
+});
 
-client.on(
-    "warn",
-    console.warn
-);
+client.on("shardError", (error) => {
+    console.error(
+        "❌ ERROR DEL GATEWAY DE DISCORD:",
+        error
+    );
+});
+
+client.on("shardDisconnect", (event, shardId) => {
+    console.error(
+        `🔴 GATEWAY DESCONECTADO | Shard ${shardId} | Código: ${event.code}`
+    );
+});
+
+client.on("shardReconnecting", (shardId) => {
+    console.warn(
+        `🔄 RECONEXIÓN AL GATEWAY | Shard ${shardId}`
+    );
+});
+
+client.on("shardReady", (shardId) => {
+    console.log(
+        `🟢 SHARD CONECTADO | Shard ${shardId}`
+    );
+});
 
 // ============================================================
 // 📦 SISTEMAS
@@ -248,188 +272,203 @@ function getAdminAbuseTime() {
 }
 
 // ============================================================
-// READY
+// 🟢 BOT CONECTADO
 // ============================================================
 
 client.once("clientReady", () => {
 
-        console.log(
-            `✅ Conectado como ${client.user.tag}`
-        );
+    console.log(
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    );
 
-        // ====================================================
-        // 🛒 SHOP RESTOCK
-        // ====================================================
+    console.log(
+        `✅ KETCHURUBOT CONECTADO COMO: ${client.user.tag}`
+    );
 
-        setInterval(
-            () => {
+    console.log(
+        `🆔 ID DEL BOT: ${client.user.id}`
+    );
 
-                try {
+    console.log(
+        `🏠 SERVIDORES: ${client.guilds.cache.size}`
+    );
 
-                    const {
-                        day,
-                        hour
-                    } = getChileDate();
+    console.log(
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    );
 
-                    let shouldRestock = false;
+    // ========================================================
+    // 🛒 SHOP RESTOCK
+    // ========================================================
 
-                    // 🟡 LUNES - JUEVES
-                    if (
-                        day >= 1 &&
-                        day <= 4 &&
+    setInterval(
+        () => {
+
+            try {
+
+                const {
+                    day,
+                    hour
+                } = getChileDate();
+
+                let shouldRestock = false;
+
+                // 🟡 LUNES - JUEVES
+                if (
+                    day >= 1 &&
+                    day <= 4 &&
+                    hour === 20
+                ) {
+                    shouldRestock = true;
+                }
+
+                // 🔵 VIERNES
+                if (
+                    day === 5 &&
+                    (
+                        hour === 8 ||
                         hour === 20
-                    ) {
-                        shouldRestock = true;
-                    }
+                    )
+                ) {
+                    shouldRestock = true;
+                }
 
-                    // 🔵 VIERNES
-                    if (
-                        day === 5 &&
-                        (
-                            hour === 8 ||
-                            hour === 20
-                        )
-                    ) {
-                        shouldRestock = true;
-                    }
+                // 🔴 SÁBADO
+                if (
+                    day === 6 &&
+                    hour % 6 === 0
+                ) {
+                    shouldRestock = true;
+                }
 
-                    // 🔴 SÁBADO
-                    if (
-                        day === 6 &&
-                        hour % 6 === 0
-                    ) {
-                        shouldRestock = true;
-                    }
+                // 🟢 DOMINGO
+                if (
+                    day === 0 &&
+                    (
+                        hour === 8 ||
+                        hour === 20
+                    )
+                ) {
+                    shouldRestock = true;
+                }
 
-                    // 🟢 DOMINGO
-                    if (
-                        day === 0 &&
-                        (
-                            hour === 8 ||
-                            hour === 20
-                        )
-                    ) {
-                        shouldRestock = true;
-                    }
+                if (shouldRestock) {
 
-                    if (shouldRestock) {
+                    restockShop();
 
-                        restockShop();
-
-                        console.log(
-                            "🛒 HAMMER TIME RESTOCK"
-                        );
-
-                    }
-
-                } catch (error) {
-
-                    console.error(
-                        "❌ Error en restock:",
-                        error
+                    console.log(
+                        "🛒 HAMMER TIME RESTOCK"
                     );
 
                 }
 
-            },
-            60 * 60 * 1000
-        );
+            } catch (error) {
 
-        // ====================================================
-        // 👇 ADMIN ABUSE
-        // ====================================================
-
-        cron.schedule(
-            "0 * * * *",
-            async () => {
-
-                try {
-
-                    const channel =
-                        client.channels.cache.get(
-                            "1512250127518011613"
-                        );
-
-                    if (!channel) {
-                        return;
-                    }
-
-                    const {
-                        saturday,
-                        tuesday
-                    } = getAdminAbuseTime();
-
-                    const now =
-                        new Date();
-
-                    const day =
-                        now.getUTCDay();
-
-                    const hour =
-                        now.getUTCHours();
-
-                    // SÁBADO - 12 HORAS ANTES
-                    if (
-                        day === 6 &&
-                        hour === saturday - 12
-                    ) {
-
-                        await channel.send(
-                            `⏰ 12 HORAS PARA ADMIN ABUSE (sábado) - ${saturday}:00 UTC`
-                        );
-
-                    }
-
-                    // MARTES - 12 HORAS ANTES
-                    if (
-                        day === 2 &&
-                        hour === tuesday - 12
-                    ) {
-
-                        await channel.send(
-                            `⏰ 12 HORAS PARA ADMIN ABUSE (martes) - ${tuesday}:00 UTC`
-                        );
-
-                    }
-
-                    // SÁBADO - INICIO
-                    if (
-                        day === 6 &&
-                        hour === saturday
-                    ) {
-
-                        await channel.send(
-                            `🔥 ADMIN ABUSE INICIADO (sábado) ${saturday}:00 UTC (Hammer time)`
-                        );
-
-                    }
-
-                    // MARTES - INICIO
-                    if (
-                        day === 2 &&
-                        hour === tuesday
-                    ) {
-
-                        await channel.send(
-                            `🔥 ADMIN ABUSE INICIADO (martes) ${tuesday}:00 UTC (Hammer time)`
-                        );
-
-                    }
-
-                } catch (error) {
-
-                    console.error(
-                        "❌ Error en Admin Abuse:",
-                        error
-                    );
-
-                }
+                console.error(
+                    "❌ Error en restock:",
+                    error
+                );
 
             }
-        );
 
-    }
-);
+        },
+        60 * 60 * 1000
+    );
+
+    // ========================================================
+    // 👇 ADMIN ABUSE
+    // ========================================================
+
+    cron.schedule(
+        "0 * * * *",
+        async () => {
+
+            try {
+
+                const channel =
+                    client.channels.cache.get(
+                        "1512250127518011613"
+                    );
+
+                if (!channel) {
+                    return;
+                }
+
+                const {
+                    saturday,
+                    tuesday
+                } = getAdminAbuseTime();
+
+                const now =
+                    new Date();
+
+                const day =
+                    now.getUTCDay();
+
+                const hour =
+                    now.getUTCHours();
+
+                // SÁBADO - 12 HORAS ANTES
+                if (
+                    day === 6 &&
+                    hour === saturday - 12
+                ) {
+
+                    await channel.send(
+                        `⏰ 12 HORAS PARA ADMIN ABUSE (sábado) - ${saturday}:00 UTC`
+                    );
+
+                }
+
+                // MARTES - 12 HORAS ANTES
+                if (
+                    day === 2 &&
+                    hour === tuesday - 12
+                ) {
+
+                    await channel.send(
+                        `⏰ 12 HORAS PARA ADMIN ABUSE (martes) - ${tuesday}:00 UTC`
+                    );
+
+                }
+
+                // SÁBADO - INICIO
+                if (
+                    day === 6 &&
+                    hour === saturday
+                ) {
+
+                    await channel.send(
+                        `🔥 ADMIN ABUSE INICIADO (sábado) ${saturday}:00 UTC (Hammer time)`
+                    );
+
+                }
+
+                // MARTES - INICIO
+                if (
+                    day === 2 &&
+                    hour === tuesday
+                ) {
+
+                    await channel.send(
+                        `🔥 ADMIN ABUSE INICIADO (martes) ${tuesday}:00 UTC (Hammer time)`
+                    );
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "❌ Error en Admin Abuse:",
+                    error
+                );
+
+            }
+
+        }
+    );
+
+});
 
 // ============================================================
 // 💬 MENSAJES + COMANDOS + ECONOMÍA
@@ -1430,17 +1469,42 @@ ${objeto.amount}
 );
 
 // ============================================================
-// 🔑 LOGIN
+// 🔑 LOGIN DISCORD
 // ============================================================
 
-client.once("clientReady", () => {
-    console.log(`✅ KETCHURUBOT CONECTADO COMO: ${client.user.tag}`);
-});
+if (!process.env.TOKEN) {
+
+    console.error(
+        "❌ ERROR CRÍTICO: No existe la variable de entorno TOKEN."
+    );
+
+    process.exit(1);
+}
+
+console.log(
+    "🔑 Token de Discord detectado correctamente."
+);
+
+console.log(
+    "🔌 Intentando conectar con Discord Gateway..."
+);
 
 client.login(process.env.TOKEN)
     .then(() => {
-        console.log("🔐 client.login() terminó correctamente.");
+
+        console.log(
+            "🔐 client.login() terminó correctamente."
+        );
+
     })
     .catch((error) => {
-        console.error("❌ ERROR AL INICIAR DISCORD:", error);
+
+        console.error(
+            "❌ ERROR AL INICIAR DISCORD:"
+        );
+
+        console.error(
+            error
+        );
+
     });
