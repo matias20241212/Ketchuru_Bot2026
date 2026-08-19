@@ -38,6 +38,7 @@ app.use(
 );
 
 app.get("/", (req, res) => {
+
     res.sendFile(
         path.join(
             __dirname,
@@ -46,25 +47,28 @@ app.get("/", (req, res) => {
             "dashboard.html"
         )
     );
+
 });
 
 app.use("/api", rankingAPI);
 
 app.listen(PORT, () => {
+
     console.log(
         `🌐 Servidor iniciado en el puerto ${PORT}`
     );
+
 });
 
 // ============================================================
 // 🤖 CLIENTE DISCORD
 // ============================================================
 
-const client = new Client({
+// IMPORTANTE:
+// Quitamos shardCount y shards.
+// Discord.js manejará la conexión normalmente.
 
-    // Un solo shard: Shard 0
-    shardCount: 1,
-    shards: [0],
+const client = new Client({
 
     intents: [
 
@@ -74,10 +78,10 @@ const client = new Client({
         // Mensajes
         GatewayIntentBits.GuildMessages,
 
-        // Leer contenido de mensajes
+        // Leer contenido
         GatewayIntentBits.MessageContent,
 
-        // Entradas / salidas de miembros
+        // Entradas / salidas
         GatewayIntentBits.GuildMembers
 
     ]
@@ -265,23 +269,23 @@ function getChileDate() {
     const weekday =
         parts.find(
             part =>
-                part.type ===
-                "weekday"
+                part.type === "weekday"
         )?.value;
 
     let hour =
         Number(
             parts.find(
                 part =>
-                    part.type ===
-                    "hour"
+                    part.type === "hour"
             )?.value
         );
 
     if (
         hour === 24
     ) {
+
         hour = 0;
+
     }
 
     const days = {
@@ -379,8 +383,70 @@ client.on(
     (event, shardId) => {
 
         console.error(
-            `🔴 GATEWAY DESCONECTADO | SHARD ${shardId} | CÓDIGO: ${event.code}`
+            `🔴 GATEWAY DESCONECTADO | SHARD ${shardId}`
         );
+
+        console.error(
+            "📛 Código:",
+            event?.code
+        );
+
+        console.error(
+            "📛 Razón:",
+            event?.reason?.toString?.() || "Sin razón"
+        );
+
+        // ====================================================
+        // CÓDIGOS IMPORTANTES
+        // ====================================================
+
+        if (
+            event?.code === 4004
+        ) {
+
+            console.error(
+                "🚨 DISCORD RECHAZÓ LA AUTENTICACIÓN."
+            );
+
+            console.error(
+                "🚨 Revisar TOKEN de Render."
+            );
+
+        }
+
+        if (
+            event?.code === 4014
+        ) {
+
+            console.error(
+                "🚨 DISCORD RECHAZÓ LOS INTENTS PRIVILEGIADOS."
+            );
+
+            console.error(
+                "🚨 Activa Message Content Intent y Server Members Intent en Discord Developer Portal."
+            );
+
+        }
+
+        if (
+            event?.code === 4013
+        ) {
+
+            console.error(
+                "🚨 INTENTS INVÁLIDOS."
+            );
+
+        }
+
+        if (
+            event?.code === 4010
+        ) {
+
+            console.error(
+                "🚨 SHARD INVÁLIDO."
+            );
+
+        }
 
     }
 );
@@ -443,7 +509,7 @@ client.once(
         );
 
         console.log(
-            `🧩 SHARD ACTIVO: ${client.shard?.ids?.join(", ") ?? "0"}`
+            "🧩 MODO: CONEXIÓN NORMAL SIN SHARD MANUAL"
         );
 
         console.log(
@@ -468,7 +534,7 @@ client.once(
                     let shouldRestock =
                         false;
 
-                    // 🟡 LUNES - JUEVES
+                    // LUNES - JUEVES
                     if (
                         day >= 1 &&
                         day <= 4 &&
@@ -480,7 +546,7 @@ client.once(
 
                     }
 
-                    // 🔵 VIERNES
+                    // VIERNES
                     if (
                         day === 5 &&
                         (
@@ -494,7 +560,7 @@ client.once(
 
                     }
 
-                    // 🔴 SÁBADO
+                    // SÁBADO
                     if (
                         day === 6 &&
                         hour % 6 === 0
@@ -505,7 +571,7 @@ client.once(
 
                     }
 
-                    // 🟢 DOMINGO
+                    // DOMINGO
                     if (
                         day === 0 &&
                         (
@@ -566,7 +632,9 @@ client.once(
                     if (
                         !channel
                     ) {
+
                         return;
+
                     }
 
                     const {
@@ -665,18 +733,20 @@ client.on(
 
         try {
 
-            // IGNORAR BOTS
             if (
                 message.author.bot
             ) {
+
                 return;
+
             }
 
-            // IGNORAR PRIVADOS
             if (
                 !message.guild
             ) {
+
                 return;
+
             }
 
             const guildId =
@@ -1666,14 +1736,28 @@ console.log(
 );
 
 console.log(
-    "🔑 Token de Discord:",
+    "🔑 TOKEN:",
     process.env.TOKEN
         ? "DETECTADO"
         : "❌ NO DETECTADO"
 );
 
 console.log(
-    "🧩 Shard configurado: 0"
+    "🔐 LONGITUD DEL TOKEN:",
+    process.env.TOKEN
+        ? process.env.TOKEN.length
+        : 0
+);
+
+console.log(
+    "🔐 TOKEN EMPIEZA CON:",
+    process.env.TOKEN
+        ? process.env.TOKEN.substring(0, 10) + "..."
+        : "N/A"
+);
+
+console.log(
+    "🧩 Sharding manual: DESACTIVADO"
 );
 
 console.log(
@@ -1683,6 +1767,10 @@ console.log(
 console.log(
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 );
+
+// ============================================================
+// 🚨 COMPROBAR TOKEN
+// ============================================================
 
 if (
     !process.env.TOKEN
@@ -1696,28 +1784,68 @@ if (
 
 }
 
-client.login(
-    process.env.TOKEN
-)
-.then(
-    () => {
+// ============================================================
+// 🔐 LOGIN
+// ============================================================
+
+async function iniciarBot() {
+
+    try {
 
         console.log(
-            "🔐 client.login() ejecutado correctamente."
+            "🔐 Ejecutando client.login()..."
         );
 
-    }
-)
-.catch(
-    (error) => {
+        await client.login(
+            process.env.TOKEN
+        );
+
+        console.log(
+            "✅ client.login() terminó correctamente."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
 
         console.error(
             "❌❌❌ ERROR AL INICIAR DISCORD ❌❌❌"
         );
 
         console.error(
-            error
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         );
 
+        console.error(
+            "📛 Nombre:",
+            error?.name
+        );
+
+        console.error(
+            "📛 Mensaje:",
+            error?.message
+        );
+
+        console.error(
+            "📛 Código:",
+            error?.code
+        );
+
+        console.error(
+            "📛 Stack:",
+            error?.stack
+        );
+
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        process.exit(1);
+
     }
-);
+
+}
+
+iniciarBot();
