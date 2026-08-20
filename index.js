@@ -5,94 +5,158 @@
 require("dotenv").config();
 
 // ============================================================
+// 🚨 ERRORES GLOBALES
+// ============================================================
+
+process.on("unhandledRejection", (error) => {
+
+    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.error("❌ UNHANDLED REJECTION");
+    console.error(error);
+    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+});
+
+process.on("uncaughtException", (error) => {
+
+    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.error("❌ UNCAUGHT EXCEPTION");
+    console.error(error);
+    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+});
+
+// ============================================================
 // 📦 IMPORTACIONES
 // ============================================================
 
-const rankingAPI = require("./Web/api/ranking.js");
+const rankingAPI =
+    require("./Web/api/ranking.js");
 
-const express = require("express");
-const db = require("./database");
-const fs = require("fs");
-const path = require("path");
-const cron = require("node-cron");
+const express =
+    require("express");
+
+const db =
+    require("./database");
+
+const fs =
+    require("fs");
+
+const path =
+    require("path");
+
+const cron =
+    require("node-cron");
 
 const {
     Client,
     GatewayIntentBits
-} = require("discord.js");
+} =
+    require("discord.js");
 
 // ============================================================
 // 🌐 SERVIDOR WEB
 // ============================================================
 
-const app = express();
+const app =
+    express();
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+    process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(
+    express.json()
+);
 
 app.use(
     express.static(
-        path.join(__dirname, "Web")
+        path.join(
+            __dirname,
+            "Web"
+        )
     )
 );
 
-app.get("/", (req, res) => {
+app.get(
+    "/",
+    (req, res) => {
 
-    res.sendFile(
-        path.join(
-            __dirname,
-            "Web",
-            "pages",
-            "dashboard.html"
-        )
-    );
+        res.sendFile(
+            path.join(
+                __dirname,
+                "Web",
+                "pages",
+                "dashboard.html"
+            )
+        );
 
-});
+    }
+);
 
-app.use("/api", rankingAPI);
+app.use(
+    "/api",
+    rankingAPI
+);
 
-app.listen(PORT, () => {
+app.listen(
+    PORT,
+    () => {
 
-    console.log(
-        `🌐 Servidor iniciado en el puerto ${PORT}`
-    );
+        console.log(
+            `🌐 Servidor iniciado en el puerto ${PORT}`
+        );
 
-});
+    }
+);
 
 // ============================================================
 // 🤖 CLIENTE DISCORD
 // ============================================================
 
-// IMPORTANTE:
-// Quitamos shardCount y shards.
-// Discord.js manejará la conexión normalmente.
+console.log(
+    "🤖 Creando cliente Discord..."
+);
 
-const client = new Client({
+const client =
+    new Client({
 
-    intents: [
+        intents: [
 
-        // Servidores
-        GatewayIntentBits.Guilds,
+            // Servidores
+            GatewayIntentBits.Guilds,
 
-        // Mensajes
-        GatewayIntentBits.GuildMessages,
+            // Mensajes
+            GatewayIntentBits.GuildMessages,
 
-        // Leer contenido
-        GatewayIntentBits.MessageContent,
+            // Contenido de mensajes
+            GatewayIntentBits.MessageContent,
 
-        // Entradas / salidas
-        GatewayIntentBits.GuildMembers
+            // Entrada/salida de miembros
+            GatewayIntentBits.GuildMembers
 
-    ]
+        ]
 
-});
+    });
+
+console.log(
+    "✅ Cliente Discord creado correctamente."
+);
 
 // ============================================================
 // 📦 COMANDOS
 // ============================================================
 
-require("./handlers/comandos")(client);
+console.log(
+    "📦 Cargando comandos..."
+);
+
+require(
+    "./handlers/comandos"
+)(client);
+
+console.log(
+    "✅ Carga de comandos terminada."
+);
 
 // ============================================================
 // 👋 BIENVENIDAS / DESPEDIDAS
@@ -101,7 +165,10 @@ require("./handlers/comandos")(client);
 const {
     bienvenida,
     despedida
-} = require("./systems/bienvenidas/bienvenida");
+} =
+    require(
+        "./systems/bienvenidas/bienvenida"
+    );
 
 client.on(
     "guildMemberAdd",
@@ -113,7 +180,9 @@ client.on(
                 `👋 NUEVO MIEMBRO: ${member.user.tag}`
             );
 
-            await bienvenida(member);
+            await bienvenida(
+                member
+            );
 
         } catch (error) {
 
@@ -137,7 +206,9 @@ client.on(
                 `👋 MIEMBRO SALIÓ: ${member.user.tag}`
             );
 
-            await despedida(member);
+            await despedida(
+                member
+            );
 
         } catch (error) {
 
@@ -157,11 +228,12 @@ client.on(
 
 let inventory = {};
 
-const inventoryFile = path.join(
-    __dirname,
-    "data",
-    "inventory.json"
-);
+const inventoryFile =
+    path.join(
+        __dirname,
+        "data",
+        "inventory.json"
+    );
 
 if (
     fs.existsSync(
@@ -225,11 +297,13 @@ const feriaButtons =
 
 const {
     restockShop
-} = require("./systems/shop");
+} =
+    require("./systems/shop");
 
 const {
     avanzarMision
-} = require("./systems/missionProgress");
+} =
+    require("./systems/missionProgress");
 
 const giftButtons =
     require("./systems/gifts/giftButtons");
@@ -258,6 +332,7 @@ function getChileDate() {
 
                 hour12:
                     false
+
             }
         );
 
@@ -359,8 +434,35 @@ client.on(
     (error) => {
 
         console.error(
-            "❌ ERROR DEL CLIENTE DISCORD:",
-            error
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.error(
+            "❌ ERROR DEL CLIENTE DISCORD"
+        );
+
+        console.error(
+            "📛 Nombre:",
+            error?.name
+        );
+
+        console.error(
+            "📛 Mensaje:",
+            error?.message
+        );
+
+        console.error(
+            "📛 Código:",
+            error?.code
+        );
+
+        console.error(
+            "📛 Stack:",
+            error?.stack
+        );
+
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         );
 
     }
@@ -371,114 +473,227 @@ client.on(
     (error, shardId) => {
 
         console.error(
-            `❌ ERROR DEL GATEWAY | SHARD ${shardId}:`,
-            error
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.error(
+            "❌ ERROR DEL GATEWAY"
+        );
+
+        console.error(
+            "🔢 SHARD:",
+            shardId
+        );
+
+        console.error(
+            "📛 Nombre:",
+            error?.name
+        );
+
+        console.error(
+            "📛 Mensaje:",
+            error?.message
+        );
+
+        console.error(
+            "📛 Código:",
+            error?.code
+        );
+
+        console.error(
+            "📛 Stack:",
+            error?.stack
+        );
+
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         );
 
     }
 );
+
+// ============================================================
+// 🔴 DESCONEXIÓN DEL GATEWAY
+// ============================================================
 
 client.on(
     "shardDisconnect",
     (event, shardId) => {
 
         console.error(
-            `🔴 GATEWAY DESCONECTADO | SHARD ${shardId}`
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         );
 
         console.error(
-            "📛 Código:",
+            "🔴 DISCORD GATEWAY DESCONECTADO"
+        );
+
+        console.error(
+            "🔢 SHARD:",
+            shardId
+        );
+
+        console.error(
+            "🔢 CÓDIGO:",
             event?.code
         );
 
         console.error(
-            "📛 Razón:",
-            event?.reason?.toString?.() || "Sin razón"
+            "📝 RAZÓN:",
+            event?.reason
+                ? event.reason.toString()
+                : "Discord no proporcionó una razón"
         );
 
         // ====================================================
         // CÓDIGOS IMPORTANTES
         // ====================================================
 
-        if (
-            event?.code === 4004
+        switch (
+            event?.code
         ) {
 
-            console.error(
-                "🚨 DISCORD RECHAZÓ LA AUTENTICACIÓN."
-            );
+            case 4004:
 
-            console.error(
-                "🚨 Revisar TOKEN de Render."
-            );
+                console.error(
+                    "🚨 CÓDIGO 4004"
+                );
+
+                console.error(
+                    "🚨 AUTENTICACIÓN RECHAZADA POR DISCORD."
+                );
+
+                console.error(
+                    "🚨 Revisar el TOKEN configurado en Render."
+                );
+
+                break;
+
+            case 4013:
+
+                console.error(
+                    "🚨 CÓDIGO 4013"
+                );
+
+                console.error(
+                    "🚨 INTENTS INVÁLIDOS."
+                );
+
+                break;
+
+            case 4014:
+
+                console.error(
+                    "🚨 CÓDIGO 4014"
+                );
+
+                console.error(
+                    "🚨 INTENT PRIVILEGIADO NO AUTORIZADO."
+                );
+
+                console.error(
+                    "🚨 Revisar Message Content Intent."
+                );
+
+                console.error(
+                    "🚨 Revisar Server Members Intent."
+                );
+
+                break;
+
+            case 4010:
+
+                console.error(
+                    "🚨 CÓDIGO 4010"
+                );
+
+                console.error(
+                    "🚨 SHARD INVÁLIDO."
+                );
+
+                break;
+
+            default:
+
+                console.error(
+                    "ℹ️ Código no identificado por el diagnóstico."
+                );
+
+                break;
 
         }
 
-        if (
-            event?.code === 4014
-        ) {
-
-            console.error(
-                "🚨 DISCORD RECHAZÓ LOS INTENTS PRIVILEGIADOS."
-            );
-
-            console.error(
-                "🚨 Activa Message Content Intent y Server Members Intent en Discord Developer Portal."
-            );
-
-        }
-
-        if (
-            event?.code === 4013
-        ) {
-
-            console.error(
-                "🚨 INTENTS INVÁLIDOS."
-            );
-
-        }
-
-        if (
-            event?.code === 4010
-        ) {
-
-            console.error(
-                "🚨 SHARD INVÁLIDO."
-            );
-
-        }
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
 
     }
 );
+
+// ============================================================
+// 🔄 RECONEXIÓN
+// ============================================================
 
 client.on(
     "shardReconnecting",
     (shardId) => {
 
         console.warn(
-            `🔄 RECONEXIÓN AL GATEWAY | SHARD ${shardId}`
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.warn(
+            `🔄 DISCORD INTENTANDO RECONEXIÓN | SHARD ${shardId}`
+        );
+
+        console.warn(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         );
 
     }
 );
+
+// ============================================================
+// 🟢 SHARD READY
+// ============================================================
 
 client.on(
     "shardReady",
     (shardId) => {
 
         console.log(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.log(
             `🟢 SHARD ${shardId} CONECTADO CORRECTAMENTE`
+        );
+
+        console.log(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         );
 
     }
 );
+
+// ============================================================
+// ❌ SESIÓN INVALIDADA
+// ============================================================
 
 client.on(
     "invalidated",
     () => {
 
         console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.error(
             "❌ SESIÓN DE DISCORD INVALIDADA"
+        );
+
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         );
 
     }
@@ -607,11 +822,7 @@ client.once(
                 }
 
             },
-
-            60 *
-            60 *
-            1000
-
+            60 * 60 * 1000
         );
 
         // ====================================================
@@ -632,6 +843,10 @@ client.once(
                     if (
                         !channel
                     ) {
+
+                        console.warn(
+                            "⚠️ Canal de Admin Abuse no encontrado."
+                        );
 
                         return;
 
@@ -655,8 +870,7 @@ client.once(
                     // SÁBADO - 12 HORAS ANTES
                     if (
                         day === 6 &&
-                        hour ===
-                        saturday - 12
+                        hour === saturday - 12
                     ) {
 
                         await channel.send(
@@ -668,8 +882,7 @@ client.once(
                     // MARTES - 12 HORAS ANTES
                     if (
                         day === 2 &&
-                        hour ===
-                        tuesday - 12
+                        hour === tuesday - 12
                     ) {
 
                         await channel.send(
@@ -733,6 +946,7 @@ client.on(
 
         try {
 
+            // IGNORAR BOTS
             if (
                 message.author.bot
             ) {
@@ -741,6 +955,7 @@ client.on(
 
             }
 
+            // IGNORAR PRIVADOS
             if (
                 !message.guild
             ) {
@@ -845,7 +1060,7 @@ client.on(
             }
 
             // =================================================
-            // 🔥 COMANDOS !
+            // 🔥 COMANDOS
             // =================================================
 
             if (
@@ -1750,18 +1965,22 @@ console.log(
 );
 
 console.log(
-    "🔐 TOKEN EMPIEZA CON:",
+    "🔐 PREFIJO DEL TOKEN:",
     process.env.TOKEN
         ? process.env.TOKEN.substring(0, 10) + "..."
         : "N/A"
 );
 
 console.log(
-    "🧩 Sharding manual: DESACTIVADO"
+    "🧩 SHARDING MANUAL: DESACTIVADO"
 );
 
 console.log(
-    "🔌 Intentando conectar con Discord Gateway..."
+    "🧩 DISCORD.JS: CONEXIÓN NORMAL"
+);
+
+console.log(
+    "🔌 INTENTANDO CONECTAR CON DISCORD GATEWAY..."
 );
 
 console.log(
@@ -1847,5 +2066,9 @@ async function iniciarBot() {
     }
 
 }
+
+// ============================================================
+// 🚀 INICIAR
+// ============================================================
 
 iniciarBot();
