@@ -3,6 +3,7 @@
 // ============================================================
 
 require("dotenv").config();
+console.log("🔎 GUILD_ID:", process.env.GUILD_ID);
 
 // ============================================================
 // 🚨 ERRORES GLOBALES
@@ -53,6 +54,12 @@ const {
     GatewayIntentBits
 } =
     require("discord.js");
+
+const {
+    REST,
+    Routes
+} =
+    require("@discordjs/rest");
 
 // ============================================================
 // 🌐 SERVIDOR WEB
@@ -157,6 +164,197 @@ require(
 console.log(
     "✅ Carga de comandos terminada."
 );
+
+console.log(
+    `💬 Comandos ! cargados: ${client.commands?.size || 0}`
+);
+
+console.log(
+    `🔵 Slash Commands / cargados: ${client.slashCommands?.size || 0}`
+);
+
+// ============================================================
+// 🔵 REGISTRAR SLASH COMMANDS EN DISCORD
+// ============================================================
+
+async function registrarSlashCommands() {
+
+    try {
+
+        const guildId =
+            process.env.GUILD_ID;
+
+        const token =
+            process.env.TOKEN;
+
+        if (!guildId) {
+
+            console.error(
+                "❌ GUILD_ID no está configurado en .env"
+            );
+
+            return;
+
+        }
+
+        if (!token) {
+
+            console.error(
+                "❌ TOKEN no está configurado."
+            );
+
+            return;
+
+        }
+
+        if (
+            !client.slashCommands ||
+            client.slashCommands.size === 0
+        ) {
+
+            console.warn(
+                "⚠️ No hay Slash Commands cargados para registrar."
+            );
+
+            return;
+
+        }
+
+        const commands = [];
+
+        for (
+            const command of client.slashCommands.values()
+        ) {
+
+            try {
+
+                // ------------------------------------------------
+                // SlashCommandBuilder
+                // ------------------------------------------------
+
+                if (
+                    command.data &&
+                    typeof command.data.toJSON === "function"
+                ) {
+
+                    commands.push(
+                        command.data.toJSON()
+                    );
+
+                    continue;
+
+                }
+
+                // ------------------------------------------------
+                // Objeto que tenga toJSON()
+                // ------------------------------------------------
+
+                if (
+                    typeof command.toJSON === "function"
+                ) {
+
+                    commands.push(
+                        command.toJSON()
+                    );
+
+                    continue;
+
+                }
+
+                console.warn(
+                    "⚠️ Slash Command ignorado porque no tiene data.toJSON():",
+                    command.name || "SIN NOMBRE"
+                );
+
+            } catch (error) {
+
+                console.error(
+                    `❌ Error preparando Slash Command: ${
+                        command.name || "SIN NOMBRE"
+                    }`,
+                    error
+                );
+
+            }
+
+        }
+
+        if (
+            commands.length === 0
+        ) {
+
+            console.warn(
+                "⚠️ No se encontraron Slash Commands válidos para registrar."
+            );
+
+            return;
+
+        }
+
+        const rest =
+            new REST({
+                version: "10"
+            }).setToken(
+                token
+            );
+
+        console.log(
+            "🔄 Registrando Slash Commands en Discord..."
+        );
+
+        console.log(
+            `🏠 GUILD_ID: ${guildId}`
+        );
+
+        console.log(
+            `🔵 Comandos a registrar: ${commands.length}`
+        );
+
+        const data =
+            await rest.put(
+                Routes.applicationGuildCommands(
+                    client.user.id,
+                    guildId
+                ),
+                {
+                    body:
+                        commands
+                }
+            );
+
+        console.log(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.log(
+            `✅ ${data.length} SLASH COMMANDS REGISTRADOS CORRECTAMENTE`
+        );
+
+        console.log(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.error(
+            "❌ ERROR REGISTRANDO SLASH COMMANDS"
+        );
+
+        console.error(
+            error
+        );
+
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+    }
+
+}
 
 // ============================================================
 // 👋 BIENVENIDAS / DESPEDIDAS
@@ -545,10 +743,6 @@ client.on(
                 : "Discord no proporcionó una razón"
         );
 
-        // ====================================================
-        // CÓDIGOS IMPORTANTES
-        // ====================================================
-
         switch (
             event?.code
         ) {
@@ -705,7 +899,7 @@ client.on(
 
 client.once(
     "clientReady",
-    () => {
+    async () => {
 
         console.log(
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -724,12 +918,25 @@ client.once(
         );
 
         console.log(
+            `💬 COMANDOS !: ${client.commands?.size || 0}`
+        );
+
+        console.log(
+            `🔵 SLASH COMMANDS /: ${client.slashCommands?.size || 0}`
+        );
+
+        console.log(
             "🧩 MODO: CONEXIÓN NORMAL SIN SHARD MANUAL"
         );
 
         console.log(
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         );
+        // ====================================================
+        // 🔵 REGISTRAR SLASH COMMANDS
+        // ====================================================
+
+        await registrarSlashCommands();
 
         // ====================================================
         // 🛒 SHOP RESTOCK
@@ -1060,7 +1267,7 @@ client.on(
             }
 
             // =================================================
-            // 🔥 COMANDOS
+            // 🔥 COMANDOS !
             // =================================================
 
             if (
@@ -1328,6 +1535,77 @@ client.on(
     async (interaction) => {
 
         try {
+
+            // =================================================
+            // 🔵 SLASH COMMANDS /
+            // =================================================
+
+            if (
+                interaction.isChatInputCommand()
+            ) {
+
+                const command =
+                    client.slashCommands?.get(
+                        interaction.commandName
+                    );
+
+                // ---------------------------------------------
+                // ❌ COMANDO NO ENCONTRADO
+                // ---------------------------------------------
+
+                if (
+                    !command
+                ) {
+
+                    console.warn(
+                        `⚠️ Slash Command no encontrado: /${interaction.commandName}`
+                    );
+
+                    return interaction.reply(
+                        {
+                            content:
+                                "❌ Ese comando no está disponible.",
+                            ephemeral:
+                                true
+                        }
+                    );
+
+                }
+
+                // ---------------------------------------------
+                // ⚡ EJECUTAR SLASH COMMAND
+                // ---------------------------------------------
+
+                if (
+                    typeof command.execute !==
+                    "function"
+                ) {
+
+                    console.error(
+                        `❌ El Slash Command /${interaction.commandName} no tiene una función execute().`
+                    );
+
+                    return interaction.reply(
+                        {
+                            content:
+                                "❌ Este comando no está configurado correctamente.",
+                            ephemeral:
+                                true
+                        }
+                    );
+
+                }
+
+                console.log(
+                    `🔵 Ejecutando Slash Command: /${interaction.commandName}`
+                );
+
+                return await command.execute(
+                    interaction,
+                    db
+                );
+
+            }
 
             // =================================================
             // 🔘 BOTONES

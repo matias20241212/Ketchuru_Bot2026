@@ -5,30 +5,25 @@ const rouletteDB = require("./ruletaDatabase");
 
 
 
-function play(){
+function play() {
 
     const random = Math.random();
 
     let result;
 
-
-    if(random < 0.48){
+    if (random < 0.48) {
 
         result = "rojo";
 
-    } 
-    else if(random < 0.96){
+    } else if (random < 0.96) {
 
         result = "negro";
 
-    }
-    else{
+    } else {
 
         result = "verde";
 
     }
-
-
 
     return {
 
@@ -46,51 +41,38 @@ function play(){
 
 
 
-
-
+/**
+ * Calcula el resultado de una partida.
+ *
+ * IMPORTANTE:
+ * Esta función es async porque guarda el resultado
+ * en la base de datos mediante rouletteDB.
+ */
 async function calculateReward(
     userId,
     bet,
     result,
     choice
-){
+) {
 
+    // Obtener el estado del jugador
     const player = states.getPlayer(userId);
 
+    // Si por alguna razón no existe el estado,
+    // evitamos que el bot se caiga.
+    if (!player) {
 
-
-    player.games++;
-
-
-
-    // PERDIÓ
-
-    if(result.color !== choice){
-
-
-        player.losses++;
-
-
-
-        await rouletteDB.addLoss({
-
-            userId,
-
-            bet,
-
-            color: result.color,
-
-            choice
-
-        });
-
-
+        console.error(
+            `❌ No existe estado de ruleta para ${userId}`
+        );
 
         return {
 
-            win:false,
+            win: false,
 
-            reward:0
+            reward: 0,
+
+            error: true
 
         };
 
@@ -98,12 +80,66 @@ async function calculateReward(
 
 
 
+    // Registrar partida
+    player.games++;
 
+
+
+    // ==================================================
+    // PERDIÓ
+    // ==================================================
+
+    if (result.color !== choice) {
+
+        player.losses++;
+
+
+
+        try {
+
+            await rouletteDB.addLoss({
+
+                userId,
+
+                bet,
+
+                color: result.color,
+
+                choice
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Error guardando derrota de ruleta:",
+                error
+            );
+
+        }
+
+
+
+        return {
+
+            win: false,
+
+            reward: 0
+
+        };
+
+    }
+
+
+
+    // ==================================================
     // GANÓ
-
+    // ==================================================
 
     const reward =
-    bet * result.multiplier;
+        Math.floor(
+            bet * result.multiplier
+        );
 
 
 
@@ -113,36 +149,42 @@ async function calculateReward(
 
 
 
+    try {
 
-    await rouletteDB.addWin({
+        await rouletteDB.addWin({
 
-        userId,
+            userId,
 
-        bet,
+            bet,
 
-        reward,
+            reward,
 
-        color:result.color,
+            color: result.color,
 
-        choice
+            choice
 
-    });
+        });
 
+    } catch (error) {
 
+        console.error(
+            "❌ Error guardando victoria de ruleta:",
+            error
+        );
+
+    }
 
 
 
     return {
 
-        win:true,
+        win: true,
 
         reward
 
     };
 
 }
-
-
 
 
 
