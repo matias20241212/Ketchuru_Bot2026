@@ -1,8 +1,8 @@
 const db = require("../database");
 
 const {
-    obtenerPalabraAleatoria
-} = require("../systems/wordle/wordleWords");
+    getRandomEasyWord
+} = require("../systems/wordle/wordleWord");
 
 // ============================================================
 // 🛡️ ROLES PERMITIDOS
@@ -19,75 +19,74 @@ const ROLES_PERMITIDOS = [
 ];
 
 // ============================================================
-// 🕛 OBTENER PRÓXIMO MEDIODÍA DE CHILE
+// 🕛 PRÓXIMO MEDIODÍA DE CHILE
 // ============================================================
 
 function obtenerProximoMediodia() {
 
     const ahora = new Date();
 
-    const partes =
-        new Intl.DateTimeFormat(
-            "en-US",
-            {
-                timeZone: "America/Santiago",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "numeric",
-                minute: "numeric",
-                hour12: false
-            }
-        ).formatToParts(ahora);
+    const partes = new Intl.DateTimeFormat(
+        "en-US",
+        {
+            timeZone: "America/Santiago",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit"
+        }
+    ).formatToParts(ahora);
 
-    const obtener =
-        tipo =>
-            partes.find(
-                parte => parte.type === tipo
-            )?.value;
+    const year = Number(
+        partes.find(p => p.type === "year").value
+    );
 
-    const year =
-        Number(obtener("year"));
+    const month = Number(
+        partes.find(p => p.type === "month").value
+    );
 
-    const month =
-        Number(obtener("month"));
+    const day = Number(
+        partes.find(p => p.type === "day").value
+    );
 
-    const day =
-        Number(obtener("day"));
+    const horaPartes = new Intl.DateTimeFormat(
+        "en-US",
+        {
+            timeZone: "America/Santiago",
+            hour: "numeric",
+            minute: "numeric",
+            hour12: false
+        }
+    ).formatToParts(ahora);
 
-    const hora =
-        Number(obtener("hour"));
+    const hora = Number(
+        horaPartes.find(p => p.type === "hour").value
+    );
 
-    const minuto =
-        Number(obtener("minute"));
+    const minuto = Number(
+        horaPartes.find(p => p.type === "minute").value
+    );
 
-    // ========================================================
-    // 📅 MEDIODÍA DE HOY
-    // ========================================================
+    // Chile puede estar en UTC-3 o UTC-4.
+    // Creamos la fecha usando los componentes de Chile
+    // y luego buscamos el siguiente mediodía.
 
-    let fecha =
-        new Date(
-            `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T12:00:00-04:00`
-        );
+    let fechaBase = new Date(
+        `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T12:00:00`
+    );
 
-    // ========================================================
-    // ⏭️ SI YA PASÓ MEDIODÍA → MAÑANA
-    // ========================================================
+    // Ajuste aproximado para trabajar con la fecha local de Chile.
+    // Lo importante es que Discord reciba correctamente el timestamp.
 
     if (
         hora > 12 ||
         (hora === 12 && minuto >= 0)
     ) {
-
-        fecha =
-            new Date(
-                fecha.getTime() +
-                24 * 60 * 60 * 1000
-            );
-
+        fechaBase.setDate(
+            fechaBase.getDate() + 1
+        );
     }
 
-    return fecha;
+    return fechaBase;
 }
 
 // ============================================================
@@ -97,28 +96,22 @@ function obtenerProximoMediodia() {
 function calcularExpiracion(duracion) {
 
     if (!duracion) {
-        return null;
-    }
-
-    const valor =
-        duracion
-            .trim()
-            .toLowerCase();
-
-    // ========================================================
-    // 🕛 ALL = HASTA EL PRÓXIMO MEDIODÍA
-    // ========================================================
-
-    if (valor === "all") {
         return obtenerProximoMediodia();
     }
 
-    // ========================================================
-    // ⏱️ 1h - 12h
-    // ========================================================
+    const duracionNormalizada =
+        duracion
+            .toLowerCase()
+            .trim();
 
+    // "all" = hasta el próximo mediodía
+    if (duracionNormalizada === "all") {
+        return obtenerProximoMediodia();
+    }
+
+    // Aceptar 1h hasta 12h
     const match =
-        valor.match(
+        duracionNormalizada.match(
             /^([1-9]|1[0-2])h$/
         );
 
@@ -147,21 +140,19 @@ function tienePermiso(member) {
 
     return member.roles.cache.some(
         role =>
-            ROLES_PERMITIDOS.includes(
-                role.id
-            )
+            ROLES_PERMITIDOS.includes(role.id)
     );
 }
 
 // ============================================================
-// 🟨 EJECUTAR COMANDO
+// 🟨 EJECUTAR CREATEWORDLE
 // ============================================================
 
 async function ejecutar(message, args) {
 
-    // ========================================================
+    // --------------------------------------------------------
     // 🌐 SOLO SERVIDORES
-    // ========================================================
+    // --------------------------------------------------------
 
     if (!message.guild) {
 
@@ -171,13 +162,11 @@ async function ejecutar(message, args) {
 
     }
 
-    // ========================================================
+    // --------------------------------------------------------
     // 🛡️ PERMISOS
-    // ========================================================
+    // --------------------------------------------------------
 
-    if (
-        !tienePermiso(message.member)
-    ) {
+    if (!tienePermiso(message.member)) {
 
         return message.reply(
             "❌ No tienes permiso para crear Wordles."
@@ -185,13 +174,11 @@ async function ejecutar(message, args) {
 
     }
 
-    // ========================================================
-    // 📋 ARGUMENTOS
-    // ========================================================
+    // --------------------------------------------------------
+    // 📖 ARGUMENTOS
+    // --------------------------------------------------------
 
-    if (
-        args.length < 2
-    ) {
+    if (args.length < 2) {
 
         return message.reply(
             "❌ **Uso correcto:**\n\n" +
@@ -203,17 +190,14 @@ async function ejecutar(message, args) {
 
     }
 
-    // ========================================================
+    // --------------------------------------------------------
     // 🟨 TIPO
-    // ========================================================
+    // --------------------------------------------------------
 
     const tipo =
-        String(args[0])
-            .toLowerCase();
+        args[0].toLowerCase();
 
-    if (
-        tipo !== "daily"
-    ) {
+    if (tipo !== "daily") {
 
         return message.reply(
             "❌ Actualmente solo puedes crear Wordles de tipo `daily`."
@@ -221,22 +205,17 @@ async function ejecutar(message, args) {
 
     }
 
-    // ========================================================
-    // 📛 NOMBRE + DURACIÓN
-    // ========================================================
+    // --------------------------------------------------------
+    // 📝 NOMBRE + DURACIÓN
+    // --------------------------------------------------------
 
     let nombre;
     let duracion;
 
-    if (
-        args.length === 2
-    ) {
+    if (args.length === 2) {
 
-        nombre =
-            "Daily";
-
-        duracion =
-            args[1];
+        nombre = "Daily";
+        duracion = args[1];
 
     } else {
 
@@ -247,54 +226,44 @@ async function ejecutar(message, args) {
                 .trim();
 
         duracion =
-            args[
-                args.length - 1
-            ];
+            args[args.length - 1];
 
     }
 
-    // ========================================================
-    // 🔍 COMPROBAR NOMBRE
-    // ========================================================
+    // --------------------------------------------------------
+    // 🚫 NOMBRE VACÍO
+    // --------------------------------------------------------
 
     if (!nombre) {
-
-        return message.reply(
-            "❌ El nombre del Wordle no puede estar vacío."
-        );
-
+        nombre = "Daily";
     }
 
-    // ========================================================
-    // ⏰ CALCULAR EXPIRACIÓN
-    // ========================================================
+    // --------------------------------------------------------
+    // ⏱️ EXPIRACIÓN
+    // --------------------------------------------------------
 
     const expiraEn =
-        calcularExpiracion(
-            duracion
-        );
+        calcularExpiracion(duracion);
 
     if (!expiraEn) {
 
         return message.reply(
             "❌ **Duración inválida.**\n\n" +
-            "Usa:\n" +
-            "• `all` → hasta el próximo mediodía\n" +
-            "• `1h` hasta `12h`"
+            "Usa `all` o entre `1h` y `12h`."
         );
 
     }
 
-    // ========================================================
-    // 🧩 OBTENER PALABRA
-    // ========================================================
+    // --------------------------------------------------------
+    // 🎲 OBTENER PALABRA
+    // --------------------------------------------------------
 
     let palabra;
 
     try {
 
         palabra =
-            obtenerPalabraAleatoria();
+            getRandomEasyWord();
 
     } catch (error) {
 
@@ -309,13 +278,10 @@ async function ejecutar(message, args) {
 
     }
 
-    if (
-        !palabra ||
-        typeof palabra !== "string"
-    ) {
+    if (!palabra) {
 
         return message.reply(
-            "❌ La lista de palabras Wordle no devolvió una palabra válida."
+            "❌ No se encontró ninguna palabra disponible."
         );
 
     }
@@ -326,9 +292,9 @@ async function ejecutar(message, args) {
 
     try {
 
-        // ====================================================
-        // 🏗️ CREAR TABLA SI NO EXISTE
-        // ====================================================
+        // ----------------------------------------------------
+        // CREAR TABLA SI NO EXISTE
+        // ----------------------------------------------------
 
         await db.query(`
             CREATE TABLE IF NOT EXISTS wordle_creados (
@@ -339,31 +305,29 @@ async function ejecutar(message, args) {
                 creado_por TEXT NOT NULL,
                 creado_en TIMESTAMP DEFAULT NOW(),
                 expira_en TIMESTAMP NOT NULL,
-                activo BOOLEAN DEFAULT TRUE
+                activo BOOLEAN DEFAULT true
             )
         `);
 
-        // ====================================================
-        // 🔴 DESACTIVAR WORDLE ANTERIOR
-        // ====================================================
+        // ----------------------------------------------------
+        // 🔴 DESACTIVAR WORDLE ANTERIOR DEL MISMO NOMBRE
+        // ----------------------------------------------------
 
         await db.query(
             `
             UPDATE wordle_creados
             SET activo = false
-            WHERE LOWER(nombre) = LOWER($1)
+            WHERE nombre = $1
               AND activo = true
             `,
-            [
-                nombre
-            ]
+            [nombre]
         );
 
-        // ====================================================
+        // ----------------------------------------------------
         // 🟢 CREAR NUEVO WORDLE
-        // ====================================================
+        // ----------------------------------------------------
 
-        const resultado =
+        const result =
             await db.query(
                 `
                 INSERT INTO wordle_creados
@@ -395,26 +359,27 @@ async function ejecutar(message, args) {
             );
 
         const wordle =
-            resultado.rows[0];
+            result.rows[0];
 
-        // ====================================================
+        // ----------------------------------------------------
         // ⏰ TIMESTAMP DISCORD
-        // ====================================================
+        // ----------------------------------------------------
 
         const timestamp =
             Math.floor(
                 expiraEn.getTime() / 1000
             );
 
-        // ====================================================
-        // ✅ RESPUESTA
-        // ====================================================
+        // ----------------------------------------------------
+        // 🟨 RESPUESTA
+        // ----------------------------------------------------
 
         return message.reply(
             `🟨 **WORDLE DAILY CREADO**\n\n` +
             `📛 Nombre: **${wordle.nombre}**\n` +
             `🆔 ID: \`${wordle.id}\`\n` +
-            `📝 Palabra: ||${palabra}||\n` +
+            `🧩 Dificultad: **Fácil**\n` +
+            `🔤 Letras: **3-5**\n` +
             `⏰ Termina: <t:${timestamp}:F>\n` +
             `⏳ Tiempo restante: <t:${timestamp}:R>\n\n` +
             `🎁 Recompensa: **10.000 monedas**\n` +
@@ -424,12 +389,22 @@ async function ejecutar(message, args) {
     } catch (error) {
 
         console.error(
-            "❌ Error creando Wordle:",
-            error
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.error(
+            "❌ ERROR CREANDO WORDLE"
+        );
+
+        console.error(error);
+
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         );
 
         return message.reply(
-            "❌ Ocurrió un error creando el Wordle. Revisa la consola."
+            "❌ Ocurrió un error creando el Wordle.\n" +
+            "Revisa la consola para ver los detalles."
         );
 
     }
@@ -437,7 +412,7 @@ async function ejecutar(message, args) {
 }
 
 // ============================================================
-// 📤 EXPORTAR COMANDO
+// 📦 EXPORTAR
 // ============================================================
 
 module.exports = {
