@@ -18,19 +18,18 @@ async function obtenerRanking() {
 
     const result = await db.query(`
         SELECT
-            t.discord_id,
+            u.discord_id,
             u.balance,
-            t.partidas
-        FROM tragamonedas_stats t
-        INNER JOIN users u
-            ON u.discord_id = t.discord_id
+            COALESCE(t.partidas, 0) AS partidas
+        FROM users u
+        LEFT JOIN tragamonedas_stats t
+            ON t.discord_id = u.discord_id
         ORDER BY u.balance DESC
         LIMIT 10
     `);
 
     return result.rows;
 }
-
 
 // =====================================================
 // 🏆 CREAR EMBED
