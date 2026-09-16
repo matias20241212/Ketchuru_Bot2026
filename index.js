@@ -3,29 +3,59 @@
 // ============================================================
 
 require("dotenv").config();
-console.log("🔎 GUILD_ID:", process.env.GUILD_ID);
+
+console.log(
+    "🔎 GUILD_ID:",
+    process.env.GUILD_ID
+);
+
 
 // ============================================================
 // 🚨 ERRORES GLOBALES
 // ============================================================
 
-process.on("unhandledRejection", (error) => {
+process.on(
+    "unhandledRejection",
+    (error) => {
 
-    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.error("❌ UNHANDLED REJECTION");
-    console.error(error);
-    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
 
-});
+        console.error(
+            "❌ UNHANDLED REJECTION"
+        );
 
-process.on("uncaughtException", (error) => {
+        console.error(error);
 
-    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.error("❌ UNCAUGHT EXCEPTION");
-    console.error(error);
-    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
 
-});
+    }
+);
+
+process.on(
+    "uncaughtException",
+    (error) => {
+
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.error(
+            "❌ UNCAUGHT EXCEPTION"
+        );
+
+        console.error(error);
+
+        console.error(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+    }
+);
+
 
 // ============================================================
 // 📦 IMPORTACIONES
@@ -39,6 +69,9 @@ const express =
 
 const db =
     require("./database");
+
+const topTragamonedas =
+    require("./commands/economy/toptragamonedas.js");
 
 const fs =
     require("fs");
@@ -60,6 +93,7 @@ const {
     Routes
 } =
     require("@discordjs/rest");
+
 
 // ============================================================
 // 🌐 SERVIDOR WEB
@@ -116,6 +150,7 @@ app.listen(
     }
 );
 
+
 // ============================================================
 // 🤖 CLIENTE DISCORD
 // ============================================================
@@ -129,16 +164,12 @@ const client =
 
         intents: [
 
-            // Servidores
             GatewayIntentBits.Guilds,
 
-            // Mensajes
             GatewayIntentBits.GuildMessages,
 
-            // Contenido de mensajes
             GatewayIntentBits.MessageContent,
 
-            // Entrada/salida de miembros
             GatewayIntentBits.GuildMembers
 
         ]
@@ -148,6 +179,7 @@ const client =
 console.log(
     "✅ Cliente Discord creado correctamente."
 );
+
 
 // ============================================================
 // 📦 COMANDOS
@@ -173,6 +205,7 @@ console.log(
     `🔵 Slash Commands / cargados: ${client.slashCommands?.size || 0}`
 );
 
+
 // ============================================================
 // 🔵 REGISTRAR SLASH COMMANDS EN DISCORD
 // ============================================================
@@ -190,7 +223,7 @@ async function registrarSlashCommands() {
         if (!guildId) {
 
             console.error(
-                "❌ GUILD_ID no está configurado en .env"
+                "❌ GUILD_ID no está configurado."
             );
 
             return;
@@ -228,10 +261,6 @@ async function registrarSlashCommands() {
 
             try {
 
-                // ------------------------------------------------
-                // SlashCommandBuilder
-                // ------------------------------------------------
-
                 if (
                     command.data &&
                     typeof command.data.toJSON === "function"
@@ -244,10 +273,6 @@ async function registrarSlashCommands() {
                     continue;
 
                 }
-
-                // ------------------------------------------------
-                // Objeto que tenga toJSON()
-                // ------------------------------------------------
 
                 if (
                     typeof command.toJSON === "function"
@@ -262,7 +287,7 @@ async function registrarSlashCommands() {
                 }
 
                 console.warn(
-                    "⚠️ Slash Command ignorado porque no tiene data.toJSON():",
+                    "⚠️ Slash Command ignorado:",
                     command.name || "SIN NOMBRE"
                 );
 
@@ -284,7 +309,7 @@ async function registrarSlashCommands() {
         ) {
 
             console.warn(
-                "⚠️ No se encontraron Slash Commands válidos para registrar."
+                "⚠️ No se encontraron Slash Commands válidos."
             );
 
             return;
@@ -344,9 +369,7 @@ async function registrarSlashCommands() {
             "❌ ERROR REGISTRANDO SLASH COMMANDS"
         );
 
-        console.error(
-            error
-        );
+        console.error(error);
 
         console.error(
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -355,6 +378,7 @@ async function registrarSlashCommands() {
     }
 
 }
+
 
 // ============================================================
 // 👋 BIENVENIDAS / DESPEDIDAS
@@ -419,6 +443,7 @@ client.on(
 
     }
 );
+
 
 // ============================================================
 // 🎒 INVENTARIO
@@ -486,6 +511,7 @@ async function saveInventory() {
 
 }
 
+
 // ============================================================
 // 📦 SISTEMAS
 // ============================================================
@@ -508,6 +534,7 @@ const giftButtons =
 
 const giftSystem =
     require("./systems/gifts/giftSystem");
+
 
 // ============================================================
 // 🇨🇱 HORA CHILE
@@ -584,6 +611,7 @@ function getChileDate() {
 
 }
 
+
 // ============================================================
 // 👇 ADMIN ABUSE
 // ============================================================
@@ -598,6 +626,7 @@ function getAdminAbuseTime() {
     };
 
 }
+
 
 // ============================================================
 // 🚨 EVENTOS DE DISCORD
@@ -709,6 +738,7 @@ client.on(
 
     }
 );
+
 
 // ============================================================
 // 🔴 DESCONEXIÓN DEL GATEWAY
@@ -824,6 +854,7 @@ client.on(
     }
 );
 
+
 // ============================================================
 // 🔄 RECONEXIÓN
 // ============================================================
@@ -846,6 +877,7 @@ client.on(
 
     }
 );
+
 
 // ============================================================
 // 🟢 SHARD READY
@@ -870,6 +902,7 @@ client.on(
     }
 );
 
+
 // ============================================================
 // ❌ SESIÓN INVALIDADA
 // ============================================================
@@ -892,6 +925,7 @@ client.on(
 
     }
 );
+
 
 // ============================================================
 // 🟢 BOT CONECTADO
@@ -932,11 +966,62 @@ client.once(
         console.log(
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         );
+
+
         // ====================================================
         // 🔵 REGISTRAR SLASH COMMANDS
         // ====================================================
 
         await registrarSlashCommands();
+
+
+        // ====================================================
+        // 🏆 CREAR TABLA DEL TOP TRAGAMONEDAS
+        // ====================================================
+
+        try {
+
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS top_tragamonedas_config (
+                    guild_id TEXT PRIMARY KEY,
+                    channel_id TEXT NOT NULL,
+                    message_id TEXT NOT NULL
+                )
+            `);
+
+            console.log(
+                "✅ Tabla top_tragamonedas_config preparada."
+            );
+
+        } catch (error) {
+
+            console.error(
+                "❌ Error preparando Top Tragamonedas:",
+                error
+            );
+
+        }
+
+
+        // ====================================================
+        // 🔥 RECUPERAR TOP TRAGAMONEDAS
+        // ====================================================
+
+        try {
+
+            await topTragamonedas.recuperarRanking(
+                client
+            );
+
+        } catch (error) {
+
+            console.error(
+                "❌ Error iniciando recuperación del Top Tragamonedas:",
+                error
+            );
+
+        }
+
 
         // ====================================================
         // 🛒 SHOP RESTOCK
@@ -956,7 +1041,9 @@ client.once(
                     let shouldRestock =
                         false;
 
+
                     // LUNES - JUEVES
+
                     if (
                         day >= 1 &&
                         day <= 4 &&
@@ -968,7 +1055,9 @@ client.once(
 
                     }
 
+
                     // VIERNES
+
                     if (
                         day === 5 &&
                         (
@@ -982,7 +1071,9 @@ client.once(
 
                     }
 
+
                     // SÁBADO
+
                     if (
                         day === 6 &&
                         hour % 6 === 0
@@ -993,7 +1084,9 @@ client.once(
 
                     }
 
+
                     // DOMINGO
+
                     if (
                         day === 0 &&
                         (
@@ -1006,6 +1099,7 @@ client.once(
                             true;
 
                     }
+
 
                     if (
                         shouldRestock
@@ -1031,6 +1125,7 @@ client.once(
             },
             60 * 60 * 1000
         );
+
 
         // ====================================================
         // 👇 ADMIN ABUSE
@@ -1074,7 +1169,9 @@ client.once(
                     const hour =
                         now.getUTCHours();
 
+
                     // SÁBADO - 12 HORAS ANTES
+
                     if (
                         day === 6 &&
                         hour === saturday - 12
@@ -1086,7 +1183,9 @@ client.once(
 
                     }
 
+
                     // MARTES - 12 HORAS ANTES
+
                     if (
                         day === 2 &&
                         hour === tuesday - 12
@@ -1098,7 +1197,9 @@ client.once(
 
                     }
 
+
                     // SÁBADO - INICIO
+
                     if (
                         day === 6 &&
                         hour === saturday
@@ -1110,7 +1211,9 @@ client.once(
 
                     }
 
+
                     // MARTES - INICIO
+
                     if (
                         day === 2 &&
                         hour === tuesday
@@ -1137,6 +1240,7 @@ client.once(
     }
 );
 
+
 // ============================================================
 // 💬 MENSAJES
 // ============================================================
@@ -1154,6 +1258,7 @@ client.on(
         try {
 
             // IGNORAR BOTS
+
             if (
                 message.author.bot
             ) {
@@ -1162,7 +1267,9 @@ client.on(
 
             }
 
+
             // IGNORAR PRIVADOS
+
             if (
                 !message.guild
             ) {
@@ -1176,6 +1283,7 @@ client.on(
 
             const userId =
                 message.author.id;
+
 
             // =================================================
             // 💰 CREAR USUARIO
@@ -1196,6 +1304,7 @@ client.on(
                     50
                 ]
             );
+
 
             // =================================================
             // 📅 DAILY STATS
@@ -1222,6 +1331,7 @@ client.on(
                 );
 
             }
+
 
             // =================================================
             // 🎯 MISIONES
@@ -1265,6 +1375,7 @@ client.on(
                 );
 
             }
+
 
             // =================================================
             // 🔥 COMANDOS !
@@ -1324,6 +1435,7 @@ client.on(
                 }
 
             }
+
 
             // =================================================
             // 📊 SISTEMA DE MENSAJES
@@ -1389,6 +1501,7 @@ client.on(
 
             serverStats.total++;
 
+
             // =================================================
             // !MENSAJES
             // =================================================
@@ -1408,6 +1521,7 @@ client.on(
                 );
 
             }
+
 
             // =================================================
             // !TOPMENSAJES
@@ -1470,6 +1584,7 @@ client.on(
 
             }
 
+
             // =================================================
             // !STATS
             // =================================================
@@ -1526,6 +1641,7 @@ client.on(
     }
 );
 
+
 // ============================================================
 // 🎁 INTERACCIONES
 // ============================================================
@@ -1549,10 +1665,6 @@ client.on(
                         interaction.commandName
                     );
 
-                // ---------------------------------------------
-                // ❌ COMANDO NO ENCONTRADO
-                // ---------------------------------------------
-
                 if (
                     !command
                 ) {
@@ -1571,10 +1683,6 @@ client.on(
                     );
 
                 }
-
-                // ---------------------------------------------
-                // ⚡ EJECUTAR SLASH COMMAND
-                // ---------------------------------------------
 
                 if (
                     typeof command.execute !==
@@ -1606,6 +1714,7 @@ client.on(
                 );
 
             }
+
 
             // =================================================
             // 🔘 BOTONES
@@ -1646,6 +1755,7 @@ client.on(
                     );
 
                 }
+
 
                 // =================================================
                 // 🎁 ACEPTAR REGALO
@@ -1698,6 +1808,7 @@ client.on(
 
                 }
 
+
                 // =================================================
                 // 🎁 RECHAZAR REGALO
                 // =================================================
@@ -1749,6 +1860,7 @@ client.on(
 
                 }
 
+
                 // =================================================
                 // ⭐ REPUTACIÓN
                 // =================================================
@@ -1775,6 +1887,7 @@ client.on(
                     );
 
                 }
+
 
                 // =================================================
                 // 🎒 INVENTARIO
@@ -1915,6 +2028,7 @@ ${objeto.amount}
 
                 }
 
+
                 // =================================================
                 // ⚡ USAR ITEM
                 // =================================================
@@ -1966,7 +2080,9 @@ ${objeto.amount}
 
                     }
 
+
                     // CANCELAR
+
                     if (
                         accion ===
                         "cancel"
@@ -1983,10 +2099,13 @@ ${objeto.amount}
 
                     }
 
+
                     let cantidad =
                         1;
 
+
                     // 3 ITEMS
+
                     if (
                         accion ===
                         "three"
@@ -1997,7 +2116,9 @@ ${objeto.amount}
 
                     }
 
+
                     // PERSONALIZADO
+
                     if (
                         accion ===
                         "custom"
@@ -2073,6 +2194,7 @@ ${objeto.amount}
                 }
 
             }
+
 
             // =================================================
             // 🧾 MODAL
@@ -2220,6 +2342,7 @@ ${objeto.amount}
     }
 );
 
+
 // ============================================================
 // 🔑 LOGIN DISCORD
 // ============================================================
@@ -2265,6 +2388,7 @@ console.log(
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 );
 
+
 // ============================================================
 // 🚨 COMPROBAR TOKEN
 // ============================================================
@@ -2280,6 +2404,7 @@ if (
     process.exit(1);
 
 }
+
 
 // ============================================================
 // 🔐 LOGIN
@@ -2344,6 +2469,7 @@ async function iniciarBot() {
     }
 
 }
+
 
 // ============================================================
 // 🚀 INICIAR
