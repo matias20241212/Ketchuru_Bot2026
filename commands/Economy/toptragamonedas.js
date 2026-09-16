@@ -31,6 +31,7 @@ async function obtenerRanking() {
     return result.rows;
 }
 
+
 // =====================================================
 // 🏆 CREAR EMBED
 // =====================================================
@@ -154,9 +155,11 @@ async function iniciarActualizador() {
         try {
 
             if (!mensajeRanking) {
+
                 await new Promise(
                     resolve => setTimeout(resolve, 1000)
                 );
+
                 continue;
             }
 
@@ -170,6 +173,10 @@ async function iniciarActualizador() {
                         partidas: user.partidas
                     }))
                 );
+
+            // =================================================
+            // 🔍 SOLO EDITAR SI CAMBIÓ ALGO
+            // =================================================
 
             if (nuevoRanking !== ultimoRanking) {
 
@@ -283,7 +290,10 @@ async function recuperarRanking(client) {
 
             mensajeRanking = mensaje;
 
-            // Actualizar inmediatamente al recuperar
+            // =================================================
+            // 🔄 ACTUALIZAR INMEDIATAMENTE
+            // =================================================
+
             const rows = await obtenerRanking();
 
             const embed = crearEmbed(rows);
@@ -338,29 +348,33 @@ module.exports = {
         try {
 
             // =================================================
-            // 🔍 SI EXISTE UNO EN MEMORIA, COMPROBARLO
+            // 🗑️ ELIMINAR TOP ANTERIOR
             // =================================================
 
             if (mensajeRanking) {
 
                 try {
 
-                    await mensajeRanking.fetch();
+                    await mensajeRanking.delete();
 
-                    return message.reply(
-                        "🏆 El **Top Tragamonedas** ya está activo y se actualiza automáticamente cada segundo."
+                    console.log(
+                        "🗑️ Top Tragamonedas anterior eliminado."
                     );
 
-                } catch {
+                } catch (deleteError) {
 
-                    mensajeRanking = null;
-                    rankingActivo = false;
+                    console.warn(
+                        "⚠️ No se pudo eliminar el Top anterior:",
+                        deleteError.message
+                    );
 
                 }
+
+                mensajeRanking = null;
             }
 
             // =================================================
-            // 📊 OBTENER DATOS
+            // 📊 OBTENER DATOS ACTUALES
             // =================================================
 
             const rows = await obtenerRanking();
@@ -368,7 +382,7 @@ module.exports = {
             const embed = crearEmbed(rows);
 
             // =================================================
-            // 📩 CREAR MENSAJE
+            // 📩 CREAR NUEVO TOP
             // =================================================
 
             const msg = await message.reply({
@@ -376,7 +390,7 @@ module.exports = {
             });
 
             // =================================================
-            // 💾 GUARDAR EN NEON PRIMERO
+            // 💾 GUARDAR NUEVO MESSAGE ID EN NEON
             // =================================================
 
             await guardarConfiguracion(
@@ -386,11 +400,11 @@ module.exports = {
             );
 
             console.log(
-                "💾 Top Tragamonedas guardado en Neon."
+                "💾 Nuevo Top Tragamonedas guardado en Neon."
             );
 
             // =================================================
-            // 💾 AHORA SÍ GUARDAR EN MEMORIA
+            // 🧠 GUARDAR NUEVO MENSAJE EN MEMORIA
             // =================================================
 
             mensajeRanking = msg;
@@ -411,7 +425,7 @@ module.exports = {
             iniciarActualizador();
 
             console.log(
-                "🏆 Top Tragamonedas activo."
+                "🏆 Nuevo Top Tragamonedas activo."
             );
 
         } catch (error) {
@@ -421,12 +435,10 @@ module.exports = {
                 error
             );
 
-            // Si algo falla, limpiar el estado
             mensajeRanking = null;
-            rankingActivo = false;
 
             return message.reply(
-                "❌ Ocurrió un error al cargar el Top Tragamonedas."
+                "❌ Ocurrió un error al recrear el Top Tragamonedas."
             );
         }
 
