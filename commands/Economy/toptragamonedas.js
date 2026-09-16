@@ -11,6 +11,13 @@ let ultimoRanking = "";
 
 
 // =====================================================
+// 🔐 ROL AUTORIZADO PARA !TOPTRAGAMONEDAS
+// =====================================================
+
+const ROL_TOP_TRAGAMONEDAS = "1465524197085155420";
+
+
+// =====================================================
 // 📊 OBTENER RANKING DESDE NEON
 // =====================================================
 
@@ -348,6 +355,23 @@ module.exports = {
         try {
 
             // =================================================
+            // 🔐 COMPROBAR ROL AUTORIZADO
+            // =================================================
+
+            if (
+                !message.member ||
+                !message.member.roles.cache.has(
+                    ROL_TOP_TRAGAMONEDAS
+                )
+            ) {
+
+                return message.reply(
+                    "❌ No tienes permiso para utilizar `!toptragamonedas`."
+                );
+            }
+
+
+            // =================================================
             // 🗑️ ELIMINAR TOP ANTERIOR
             // =================================================
 
@@ -373,6 +397,7 @@ module.exports = {
                 mensajeRanking = null;
             }
 
+
             // =================================================
             // 📊 OBTENER DATOS ACTUALES
             // =================================================
@@ -381,6 +406,7 @@ module.exports = {
 
             const embed = crearEmbed(rows);
 
+
             // =================================================
             // 📩 CREAR NUEVO TOP
             // =================================================
@@ -388,6 +414,7 @@ module.exports = {
             const msg = await message.reply({
                 embeds: [embed]
             });
+
 
             // =================================================
             // 💾 GUARDAR NUEVO MESSAGE ID EN NEON
@@ -403,6 +430,7 @@ module.exports = {
                 "💾 Nuevo Top Tragamonedas guardado en Neon."
             );
 
+
             // =================================================
             // 🧠 GUARDAR NUEVO MENSAJE EN MEMORIA
             // =================================================
@@ -417,6 +445,7 @@ module.exports = {
                         partidas: user.partidas
                     }))
                 );
+
 
             // =================================================
             // 🔄 INICIAR ACTUALIZADOR
