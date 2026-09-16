@@ -71,7 +71,7 @@ const db =
     require("./database");
 
 const topTragamonedas =
-    require("./commands/economy/toptragamonedas.js");
+    require("./commands/Economy/toptragamonedas.js");
 
 const fs =
     require("fs");
