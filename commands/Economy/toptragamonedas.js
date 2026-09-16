@@ -49,21 +49,13 @@ function crearEmbed(rows) {
         let medalla;
 
         if (puesto === 1) {
-
             medalla = "🥇";
-
         } else if (puesto === 2) {
-
             medalla = "🥈";
-
         } else if (puesto === 3) {
-
             medalla = "🥉";
-
         } else {
-
             medalla = `**${puesto}.**`;
-
         }
 
         texto += `
@@ -90,7 +82,7 @@ ${medalla} 👤 <@${user.discord_id}>
 
 
 // =====================================================
-// 🔑 GUARDAR MENSAJE EN NEON
+// 🔑 GUARDAR CONFIGURACIÓN
 // =====================================================
 
 async function guardarConfiguracion(
@@ -121,7 +113,7 @@ async function guardarConfiguracion(
 
 
 // =====================================================
-// 🔍 OBTENER CONFIGURACIÓN DESDE NEON
+// 🔍 OBTENER CONFIGURACIÓN
 // =====================================================
 
 async function obtenerConfiguracion(guildId) {
@@ -138,15 +130,7 @@ async function obtenerConfiguracion(guildId) {
         guildId
     ]);
 
-    if (
-        result.rows.length === 0
-    ) {
-
-        return null;
-
-    }
-
-    return result.rows[0];
+    return result.rows[0] || null;
 }
 
 
@@ -157,9 +141,7 @@ async function obtenerConfiguracion(guildId) {
 async function iniciarActualizador() {
 
     if (rankingActivo) {
-
         return;
-
     }
 
     rankingActivo = true;
@@ -173,60 +155,34 @@ async function iniciarActualizador() {
         try {
 
             if (!mensajeRanking) {
-
                 await new Promise(
-                    resolve =>
-                        setTimeout(
-                            resolve,
-                            1000
-                        )
+                    resolve => setTimeout(resolve, 1000)
                 );
-
                 continue;
-
             }
 
-            const rows =
-                await obtenerRanking();
+            const rows = await obtenerRanking();
 
             const nuevoRanking =
                 JSON.stringify(
-                    rows.map(
-                        user => ({
-                            discord_id:
-                                user.discord_id,
-
-                            balance:
-                                user.balance,
-
-                            partidas:
-                                user.partidas
-                        })
-                    )
+                    rows.map(user => ({
+                        discord_id: user.discord_id,
+                        balance: user.balance,
+                        partidas: user.partidas
+                    }))
                 );
 
-            // =================================================
-            // 🔄 SOLO EDITAR SI CAMBIÓ EL RANKING
-            // =================================================
+            if (nuevoRanking !== ultimoRanking) {
 
-            if (
-                nuevoRanking !==
-                ultimoRanking
-            ) {
-
-                ultimoRanking =
-                    nuevoRanking;
-
-                const embed =
-                    crearEmbed(rows);
+                const embed = crearEmbed(rows);
 
                 try {
 
                     await mensajeRanking.edit({
-                        embeds: [
-                            embed
-                        ]
+                        embeds: [embed]
                     });
+
+                    ultimoRanking = nuevoRanking;
 
                     console.log(
                         "🔄 Top Tragamonedas actualizado."
@@ -234,27 +190,17 @@ async function iniciarActualizador() {
 
                 } catch (editError) {
 
-                    // =========================================
-                    // 🗑️ MENSAJE ELIMINADO / NO DISPONIBLE
-                    // =========================================
-
                     if (
-                        editError.code === 10008
+                        editError.code === 10008 ||
+                        editError.code === 10003
                     ) {
 
                         console.warn(
-                            "⚠️ El mensaje del Top Tragamonedas ya no existe."
+                            "⚠️ El mensaje del Top ya no existe."
                         );
 
-                        mensajeRanking =
-                            null;
-
-                        rankingActivo =
-                            false;
-
-                        console.warn(
-                            "⚠️ Ejecuta !toptragamonedas para crear uno nuevo."
-                        );
+                        mensajeRanking = null;
+                        rankingActivo = false;
 
                     } else {
 
@@ -276,20 +222,15 @@ async function iniciarActualizador() {
         }
 
         await new Promise(
-            resolve =>
-                setTimeout(
-                    resolve,
-                    1000
-                )
+            resolve => setTimeout(resolve, 1000)
         );
 
     }
-
 }
 
 
 // =====================================================
-// 🔥 RECUPERAR RANKING DESPUÉS DE REINICIO
+// 🔥 RECUPERAR DESPUÉS DE REINICIO
 // =====================================================
 
 async function recuperarRanking(client) {
@@ -300,24 +241,13 @@ async function recuperarRanking(client) {
             "🔎 Buscando Top Tragamonedas guardado en Neon..."
         );
 
-        const guilds =
-            client.guilds.cache;
-
-        for (
-            const guild of guilds.values()
-        ) {
+        for (const guild of client.guilds.cache.values()) {
 
             const config =
-                await obtenerConfiguracion(
-                    guild.id
-                );
+                await obtenerConfiguracion(guild.id);
 
-            if (
-                !config
-            ) {
-
+            if (!config) {
                 continue;
-
             }
 
             console.log(
@@ -326,66 +256,50 @@ async function recuperarRanking(client) {
 
             const channel =
                 await client.channels
-                    .fetch(
-                        config.channel_id
-                    )
-                    .catch(
-                        () => null
-                    );
+                    .fetch(config.channel_id)
+                    .catch(() => null);
 
-            if (
-                !channel
-            ) {
+            if (!channel) {
 
                 console.warn(
-                    "⚠️ No se pudo encontrar el canal del Top Tragamonedas."
+                    "⚠️ No se pudo encontrar el canal del Top."
                 );
 
                 continue;
-
             }
 
             const mensaje =
                 await channel.messages
-                    .fetch(
-                        config.message_id
-                    )
-                    .catch(
-                        () => null
-                    );
+                    .fetch(config.message_id)
+                    .catch(() => null);
 
-            if (
-                !mensaje
-            ) {
+            if (!mensaje) {
 
                 console.warn(
-                    "⚠️ No se pudo encontrar el mensaje del Top Tragamonedas."
+                    "⚠️ No se pudo encontrar el mensaje del Top."
                 );
 
                 continue;
-
             }
 
-            mensajeRanking =
-                mensaje;
+            mensajeRanking = mensaje;
 
-            const rows =
-                await obtenerRanking();
+            // Actualizar inmediatamente al recuperar
+            const rows = await obtenerRanking();
+
+            const embed = crearEmbed(rows);
+
+            await mensajeRanking.edit({
+                embeds: [embed]
+            });
 
             ultimoRanking =
                 JSON.stringify(
-                    rows.map(
-                        user => ({
-                            discord_id:
-                                user.discord_id,
-
-                            balance:
-                                user.balance,
-
-                            partidas:
-                                user.partidas
-                        })
-                    )
+                    rows.map(user => ({
+                        discord_id: user.discord_id,
+                        balance: user.balance,
+                        partidas: user.partidas
+                    }))
                 );
 
             console.log(
@@ -395,7 +309,6 @@ async function recuperarRanking(client) {
             iniciarActualizador();
 
             return;
-
         }
 
         console.log(
@@ -410,7 +323,6 @@ async function recuperarRanking(client) {
         );
 
     }
-
 }
 
 
@@ -422,63 +334,51 @@ module.exports = {
 
     name: "toptragamonedas",
 
-    // ================================================
-    // COMANDO !TOPTRAGAMONEDAS
-    // ================================================
-
     async execute(message) {
 
         try {
 
-            // ============================================
-            // 🔒 EVITAR DUPLICADOS
-            // ============================================
+            // =================================================
+            // 🔍 SI EXISTE UNO EN MEMORIA, COMPROBARLO
+            // =================================================
 
-            if (
-                mensajeRanking
-            ) {
+            if (mensajeRanking) {
 
-                return message.reply(
-                    "🏆 El **Top Tragamonedas** ya está activo y se actualiza automáticamente cada segundo."
-                );
+                try {
 
+                    await mensajeRanking.fetch();
+
+                    return message.reply(
+                        "🏆 El **Top Tragamonedas** ya está activo y se actualiza automáticamente cada segundo."
+                    );
+
+                } catch {
+
+                    mensajeRanking = null;
+                    rankingActivo = false;
+
+                }
             }
 
-            // ============================================
+            // =================================================
             // 📊 OBTENER DATOS
-            // ============================================
+            // =================================================
 
-            const rows =
-                await obtenerRanking();
+            const rows = await obtenerRanking();
 
-            // ============================================
-            // 🏆 CREAR EMBED
-            // ============================================
+            const embed = crearEmbed(rows);
 
-            const embed =
-                crearEmbed(rows);
-
-            // ============================================
+            // =================================================
             // 📩 CREAR MENSAJE
-            // ============================================
+            // =================================================
 
-            const msg =
-                await message.reply({
-                    embeds: [
-                        embed
-                    ]
-                });
+            const msg = await message.reply({
+                embeds: [embed]
+            });
 
-            // ============================================
-            // 💾 GUARDAR REFERENCIA EN MEMORIA
-            // ============================================
-
-            mensajeRanking =
-                msg;
-
-            // ============================================
-            // 💾 GUARDAR REFERENCIA EN NEON
-            // ============================================
+            // =================================================
+            // 💾 GUARDAR EN NEON PRIMERO
+            // =================================================
 
             await guardarConfiguracion(
                 message.guild.id,
@@ -490,29 +390,24 @@ module.exports = {
                 "💾 Top Tragamonedas guardado en Neon."
             );
 
-            // ============================================
-            // 📌 GUARDAR ESTADO INICIAL
-            // ============================================
+            // =================================================
+            // 💾 AHORA SÍ GUARDAR EN MEMORIA
+            // =================================================
+
+            mensajeRanking = msg;
 
             ultimoRanking =
                 JSON.stringify(
-                    rows.map(
-                        user => ({
-                            discord_id:
-                                user.discord_id,
-
-                            balance:
-                                user.balance,
-
-                            partidas:
-                                user.partidas
-                        })
-                    )
+                    rows.map(user => ({
+                        discord_id: user.discord_id,
+                        balance: user.balance,
+                        partidas: user.partidas
+                    }))
                 );
 
-            // ============================================
+            // =================================================
             // 🔄 INICIAR ACTUALIZADOR
-            // ============================================
+            // =================================================
 
             iniciarActualizador();
 
@@ -527,17 +422,16 @@ module.exports = {
                 error
             );
 
+            // Si algo falla, limpiar el estado
+            mensajeRanking = null;
+            rankingActivo = false;
+
             return message.reply(
                 "❌ Ocurrió un error al cargar el Top Tragamonedas."
             );
-
         }
 
     },
-
-    // ================================================
-    // 🔥 FUNCIÓN PARA INDEX.JS
-    // ================================================
 
     recuperarRanking
 
