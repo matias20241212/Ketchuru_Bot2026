@@ -4,12 +4,939 @@
 <head>
 
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Servidor - Ketchuru Dashboard</title>
 
     <link rel="stylesheet" href="../styles.css">
+
+    <style>
+
+        /* =====================================================
+           🎄 KETCHURU CHRISTMAS DASHBOARD
+        ===================================================== */
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            width: 100%;
+            min-height: 100%;
+            background: #050505 !important;
+        }
+
+
+        body.pagina2 {
+
+            width: 100%;
+            min-height: 100vh;
+
+            margin: 0;
+            padding: 0;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            color: white !important;
+
+            overflow-x: hidden;
+
+            background:
+                radial-gradient(
+                    circle at 10% 15%,
+                    rgba(255, 0, 0, 0.28),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 90% 20%,
+                    rgba(0, 180, 70, 0.18),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 50% 100%,
+                    rgba(255, 170, 0, 0.16),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #020403 0%,
+                    #07100a 50%,
+                    #030403 100%
+                ) !important;
+        }
+
+
+
+        /* =====================================================
+           🚫 ELIMINAR FONDO BLANCO
+        ===================================================== */
+
+        body.pagina2 .overlay {
+
+            width: 100%;
+            min-height: 100vh;
+
+            margin: 0;
+            padding: 60px 20px;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: transparent !important;
+
+            position: relative;
+            z-index: 5;
+        }
+
+
+
+        /* =====================================================
+           🎄 BRILLOS NAVIDEÑOS
+        ===================================================== */
+
+        body.pagina2::before {
+
+            content: "";
+
+            position: fixed;
+
+            width: 500px;
+            height: 500px;
+
+            left: -220px;
+            top: -220px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255, 0, 0, 0.16);
+
+            filter:
+                blur(110px);
+
+            pointer-events: none;
+
+            z-index: 1;
+        }
+
+
+        body.pagina2::after {
+
+            content: "";
+
+            position: fixed;
+
+            width: 500px;
+            height: 500px;
+
+            right: -220px;
+            bottom: -220px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(0, 180, 70, 0.14);
+
+            filter:
+                blur(110px);
+
+            pointer-events: none;
+
+            z-index: 1;
+        }
+
+
+
+        /* =====================================================
+           💡 LUCES DE NAVIDAD
+        ===================================================== */
+
+        .christmas-lights {
+
+            position: fixed;
+
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 45px;
+
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+
+            padding: 0 25px;
+
+            background:
+                rgba(0, 0, 0, 0.30);
+
+            border-bottom:
+                1px solid
+                rgba(255, 255, 255, 0.06);
+
+            z-index: 20;
+        }
+
+
+        .bulb {
+
+            width: 13px;
+            height: 13px;
+
+            border-radius: 50%;
+
+            box-shadow:
+                0 0 15px currentColor,
+                0 0 30px currentColor;
+
+            animation:
+                blink 1.8s infinite alternate;
+        }
+
+
+        .bulb.red {
+            color: #ff2020;
+            background: #ff2020;
+        }
+
+
+        .bulb.green {
+            color: #00d85a;
+            background: #00d85a;
+            animation-delay: .5s;
+        }
+
+
+        .bulb.gold {
+            color: #ffc400;
+            background: #ffc400;
+            animation-delay: 1s;
+        }
+
+
+        @keyframes blink {
+
+            from {
+                opacity: .45;
+                transform: scale(.85);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+
+        }
+
+
+
+        /* =====================================================
+           ❄️ NIEVE
+        ===================================================== */
+
+        .snow {
+
+            position: fixed;
+
+            inset: 0;
+
+            pointer-events: none;
+
+            z-index: 3;
+
+            opacity: .7;
+
+            background-image:
+                radial-gradient(
+                    circle,
+                    rgba(255,255,255,.9) 0 2px,
+                    transparent 3px
+                );
+
+            background-size:
+                95px 95px;
+
+            animation:
+                snowfall 18s linear infinite;
+        }
+
+
+        @keyframes snowfall {
+
+            from {
+                background-position:
+                    0 -100px;
+            }
+
+            to {
+                background-position:
+                    80px 900px;
+            }
+
+        }
+
+
+
+        /* =====================================================
+           🧊 TARJETA PRINCIPAL
+        ===================================================== */
+
+        .dashboard-card {
+
+            position: relative;
+            z-index: 10;
+
+            width: min(850px, 100%);
+
+            padding: 45px;
+
+            border-radius: 28px;
+
+            text-align: center;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(15, 24, 18, 0.97),
+                    rgba(5, 8, 6, 0.97)
+                ) !important;
+
+            border:
+                1px solid
+                rgba(0, 210, 80, 0.30);
+
+            box-shadow:
+
+                0 30px 90px
+                rgba(0, 0, 0, .9),
+
+                0 0 55px
+                rgba(0, 180, 70, .10),
+
+                inset 0 1px 0
+                rgba(255,255,255,.07);
+
+            backdrop-filter:
+                blur(20px);
+
+            -webkit-backdrop-filter:
+                blur(20px);
+
+            animation:
+                aparecer .7s ease;
+        }
+
+
+        @keyframes aparecer {
+
+            from {
+                opacity: 0;
+                transform:
+                    translateY(25px)
+                    scale(.97);
+            }
+
+            to {
+                opacity: 1;
+                transform:
+                    translateY(0)
+                    scale(1);
+            }
+
+        }
+
+
+
+        /* =====================================================
+           🤖 LOGO
+        ===================================================== */
+
+        .logo {
+
+            width: 115px;
+            height: 115px;
+
+            object-fit: contain;
+
+            display: block;
+
+            margin:
+                0 auto 15px;
+
+            filter:
+                drop-shadow(
+                    0 0 15px
+                    rgba(255, 40, 40, .45)
+                );
+
+            animation:
+                floatLogo 4s ease-in-out infinite;
+        }
+
+
+        @keyframes floatLogo {
+
+            0%,
+            100% {
+                transform:
+                    translateY(0);
+            }
+
+            50% {
+                transform:
+                    translateY(-6px);
+            }
+
+        }
+
+
+
+        /* =====================================================
+           🎄 TÍTULO
+        ===================================================== */
+
+        .title {
+
+            margin:
+                0 0 18px;
+
+            font-size:
+                clamp(28px, 5vw, 40px);
+
+            font-weight:
+                900;
+
+            line-height:
+                1.2;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ff3030,
+                    #ffffff,
+                    #00d95a
+                );
+
+            -webkit-background-clip:
+                text;
+
+            background-clip:
+                text;
+
+            -webkit-text-fill-color:
+                transparent;
+        }
+
+
+
+        /* =====================================================
+           📄 DESCRIPCIÓN
+        ===================================================== */
+
+        .description {
+
+            margin:
+                0 auto 30px;
+
+            max-width:
+                650px;
+
+            color:
+                #d5d5d5 !important;
+
+            font-size:
+                15px;
+
+            line-height:
+                1.7;
+        }
+
+
+
+        /* =====================================================
+           ⚙️ PANELES
+        ===================================================== */
+
+        .panel {
+
+            margin-top:
+                20px;
+
+            padding:
+                25px;
+
+            text-align:
+                left;
+
+            border-radius:
+                20px;
+
+            background:
+                rgba(255,255,255,.045) !important;
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+
+            box-shadow:
+                inset 0 1px 0
+                rgba(255,255,255,.04);
+
+            transition:
+                .2s ease;
+        }
+
+
+        .panel:hover {
+
+            border-color:
+                rgba(0, 210, 80, .25);
+
+            box-shadow:
+                0 10px 30px
+                rgba(0, 0, 0, .25);
+        }
+
+
+
+        /* =====================================================
+           👥 SUBTÍTULOS
+        ===================================================== */
+
+        .subtitle {
+
+            margin:
+                0 0 8px;
+
+            color:
+                #ffffff !important;
+
+            font-size:
+                20px;
+
+            font-weight:
+                800;
+        }
+
+
+        .panel-text {
+
+            margin:
+                0 0 18px;
+
+            color:
+                #aaaaaa !important;
+
+            font-size:
+                14px;
+        }
+
+
+
+        /* =====================================================
+           ➕ BOTÓN ROL
+        ===================================================== */
+
+        .action-btn {
+
+            padding:
+                12px 18px;
+
+            border:
+                0;
+
+            border-radius:
+                10px;
+
+            color:
+                white !important;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #d60000,
+                    #ff3b3b
+                ) !important;
+
+            font-weight:
+                800;
+
+            cursor:
+                pointer;
+
+            transition:
+                .2s ease;
+        }
+
+
+        .action-btn:hover {
+
+            transform:
+                translateY(-2px);
+
+            filter:
+                brightness(1.1);
+
+            box-shadow:
+                0 8px 22px
+                rgba(255,0,0,.25);
+        }
+
+
+
+        /* =====================================================
+           🤖 COMANDOS
+        ===================================================== */
+
+        .comandos {
+
+            display:
+                flex;
+
+            flex-direction:
+                column;
+
+            gap:
+                10px;
+
+            margin-top:
+                18px;
+        }
+
+
+        .comando {
+
+            display:
+                flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                center;
+
+            gap:
+                15px;
+
+            padding:
+                14px 15px;
+
+            border-radius:
+                12px;
+
+            color:
+                #eeeeee !important;
+
+            background:
+                rgba(0,0,0,.30) !important;
+
+            border:
+                1px solid
+                rgba(255,255,255,.06);
+
+            font-family:
+                Consolas,
+                monospace;
+
+            font-size:
+                14px;
+
+            transition:
+                .2s ease;
+        }
+
+
+        .comando:hover {
+
+            transform:
+                translateX(3px);
+
+            border-color:
+                rgba(0, 210, 80, .30);
+
+            background:
+                rgba(0, 180, 70, .08) !important;
+        }
+
+
+
+        /* =====================================================
+           ✅ ACTIVAR
+        ===================================================== */
+
+        .activate-btn {
+
+            flex-shrink:
+                0;
+
+            padding:
+                8px 15px;
+
+            border:
+                0;
+
+            border-radius:
+                9px;
+
+            color:
+                #061009 !important;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #00d95a,
+                    #8affbd
+                ) !important;
+
+            font-weight:
+                900;
+
+            cursor:
+                pointer;
+
+            transition:
+                .2s ease;
+        }
+
+
+        .activate-btn:hover {
+
+            transform:
+                scale(1.06);
+
+            box-shadow:
+                0 0 18px
+                rgba(0, 220, 90, .35);
+        }
+
+
+
+        /* =====================================================
+           📋 MENÚ
+        ===================================================== */
+
+        .menu {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap:
+                14px;
+
+            margin-top:
+                28px;
+        }
+
+
+        .menu a {
+
+            min-height:
+                75px;
+
+            display:
+                flex;
+
+            justify-content:
+                center;
+
+            align-items:
+                center;
+
+            gap:
+                9px;
+
+            color:
+                #ffffff !important;
+
+            text-decoration:
+                none;
+
+            border-radius:
+                15px;
+
+            background:
+                rgba(255,255,255,.045) !important;
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+
+            font-weight:
+                800;
+
+            transition:
+                .2s ease;
+        }
+
+
+        .menu a:hover {
+
+            transform:
+                translateY(-3px);
+
+            border-color:
+                rgba(0,210,80,.35);
+
+            background:
+                rgba(0,180,70,.09) !important;
+        }
+
+
+
+        /* =====================================================
+           📍 INDICADORES
+        ===================================================== */
+
+        .pages {
+
+            display:
+                flex;
+
+            justify-content:
+                center;
+
+            gap:
+                8px;
+
+            margin-top:
+                28px;
+        }
+
+
+        .pages span {
+
+            width:
+                8px;
+
+            height:
+                8px;
+
+            border-radius:
+                50%;
+
+            display:
+                block;
+
+            background:
+                #444 !important;
+        }
+
+
+        .pages span.active {
+
+            width:
+                24px;
+
+            border-radius:
+                10px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ff3030,
+                    #00d95a
+                ) !important;
+
+            box-shadow:
+                0 0 14px
+                rgba(0,210,80,.45);
+        }
+
+
+
+        /* =====================================================
+           📱 MÓVIL
+        ===================================================== */
+
+        @media (max-width: 650px) {
+
+            body.pagina2 .overlay {
+
+                padding:
+                    55px 12px 25px;
+            }
+
+
+            .dashboard-card {
+
+                padding:
+                    30px 18px;
+
+                border-radius:
+                    22px;
+            }
+
+
+            .logo {
+
+                width:
+                    95px;
+
+                height:
+                    95px;
+            }
+
+
+            .panel {
+
+                padding:
+                    18px;
+            }
+
+
+            .comando {
+
+                flex-direction:
+                    column;
+
+                align-items:
+                    stretch;
+            }
+
+
+            .activate-btn {
+
+                width:
+                    100%;
+            }
+
+
+            .menu {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .christmas-lights {
+
+                padding:
+                    0 8px;
+            }
+
+
+            .bulb {
+
+                width:
+                    9px;
+
+                height:
+                    9px;
+            }
+
+        }
+
+    </style>
 
 </head>
 
@@ -17,174 +944,280 @@
 <body class="pagina2">
 
 
-<div class="overlay">
-
-
-    <div class="dashboard-card">
-
-
-        <img src="../images/ketchuru-logo.png" class="logo">
-
-
-        <h1 class="title">
-            ⚙️ Configuración del Servidor
-        </h1>
-
-
-        <p class="description">
-            Administra los permisos y funciones de Ketchuru.<br>
-            Controla qué usuarios pueden usar comandos<br>
-            y activa las herramientas de tu servidor.
-        </p>
-
-
-
-        <div class="panel">
-
-            <h2 class="subtitle">
-                👥 Roles con acceso al Dashboard
-            </h2>
-
-
-            <p class="panel-text">
-                Selecciona qué roles pueden administrar Ketchuru.
-            </p>
-
-
-            <button class="action-btn">
-                ➕ Añadir rol permitido
-            </button>
-
-        </div>
-
-
-
-
-        <div class="panel">
-
-            <h2 class="subtitle">
-                🤖 Comandos configurables
-            </h2>
-
-
-            <div class="comandos">
-
-
-                <div class="comando">
-                    💰 !addmoney (user)
-                    <button class="activate-btn">
-                        Activar
-                    </button>
-                </div>
-
-
-                <div class="comando">
-                    📦 !restock
-                    <button class="activate-btn">
-                        Activar
-                    </button>
-                </div>
-
-
-                <div class="comando">
-                    🎉 !restockevent (name)
-                    <button class="activate-btn">
-                        Activar
-                    </button>
-                </div>
-
-
-                <div class="comando">
-                    ❌ !restockevent off
-                    <button class="activate-btn">
-                        Activar
-                    </button>
-                </div>
-
-
-                <div class="comando">
-                    ✨ !multiplier
-                    <button class="activate-btn">
-                        Activar
-                    </button>
-                </div>
-
-
-                <div class="comando">
-                    🎰 !tragamonedasmultiplier
-                    <button class="activate-btn">
-                        Activar
-                    </button>
-                </div>
-
-
-                <div class="comando">
-                    🗑️ !deletecode (name)
-                    <button class="activate-btn">
-                        Activar
-                    </button>
-                </div>
-
-
-                <div class="comando">
-                    📝 !createcode (name)
-                    <button class="activate-btn">
-                        Activar
-                    </button>
-                </div>
-
-
-            </div>
-
-        </div>
-
-
-
-
-
-        <div class="menu">
-
-
-            <a href="dashboard.html">
-                🏠
-                <span>
-                    Volver al menú
-                </span>
-            </a>
-
-
-
-            <a href="dashboard-recomendaciones.html">
-                💡
-                <span>
-                    Recomendaciones
-                </span>
-            </a>
-
-
-        </div>
-
-
-
-
-
-        <div class="pages">
-
-            <span></span>
-
-            <span class="active"></span>
-
-            <span></span>
-
-        </div>
-
-
+    <!-- =====================================================
+         🎄 LUCES
+    ===================================================== -->
+
+    <div class="christmas-lights">
+
+        <span class="bulb red"></span>
+        <span class="bulb green"></span>
+        <span class="bulb gold"></span>
+        <span class="bulb red"></span>
+        <span class="bulb green"></span>
+        <span class="bulb gold"></span>
+        <span class="bulb red"></span>
+        <span class="bulb green"></span>
+        <span class="bulb gold"></span>
+        <span class="bulb red"></span>
+        <span class="bulb green"></span>
+        <span class="bulb gold"></span>
 
     </div>
 
 
-</div>
+    <!-- =====================================================
+         ❄️ NIEVE
+    ===================================================== -->
 
+    <div class="snow"></div>
+
+
+    <!-- =====================================================
+         ⚙️ DASHBOARD
+    ===================================================== -->
+
+    <div class="overlay">
+
+
+        <div class="dashboard-card">
+
+
+            <!-- 🤖 LOGO -->
+
+            <img
+                src="../images/ketchuru-logo.png"
+                class="logo"
+                alt="Ketchuru Bot"
+            >
+
+
+            <!-- 🎄 TÍTULO -->
+
+            <h1 class="title">
+                ⚙️ Configuración del Servidor
+            </h1>
+
+
+            <!-- 📄 DESCRIPCIÓN -->
+
+            <p class="description">
+
+                Administra los permisos y funciones de Ketchuru.<br>
+
+                Controla qué usuarios pueden usar comandos<br>
+
+                y activa las herramientas de tu servidor.
+
+            </p>
+
+
+
+            <!-- =================================================
+                 👥 ROLES
+            ================================================= -->
+
+            <div class="panel">
+
+                <h2 class="subtitle">
+                    👥 Roles con acceso al Dashboard
+                </h2>
+
+                <p class="panel-text">
+                    Selecciona qué roles pueden administrar Ketchuru.
+                </p>
+
+                <button class="action-btn">
+                    ➕ Añadir rol permitido
+                </button>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 🤖 COMANDOS
+            ================================================= -->
+
+            <div class="panel">
+
+                <h2 class="subtitle">
+                    🤖 Comandos configurables
+                </h2>
+
+
+                <div class="comandos">
+
+
+                    <div class="comando">
+
+                        <span>
+                            💰 !addmoney (user)
+                        </span>
+
+                        <button class="activate-btn">
+                            Activar
+                        </button>
+
+                    </div>
+
+
+
+                    <div class="comando">
+
+                        <span>
+                            📦 !restock
+                        </span>
+
+                        <button class="activate-btn">
+                            Activar
+                        </button>
+
+                    </div>
+
+
+
+                    <div class="comando">
+
+                        <span>
+                            🎉 !restockevent (name)
+                        </span>
+
+                        <button class="activate-btn">
+                            Activar
+                        </button>
+
+                    </div>
+
+
+
+                    <div class="comando">
+
+                        <span>
+                            ❌ !restockevent off
+                        </span>
+
+                        <button class="activate-btn">
+                            Activar
+                        </button>
+
+                    </div>
+
+
+
+                    <div class="comando">
+
+                        <span>
+                            ✨ !multiplier
+                        </span>
+
+                        <button class="activate-btn">
+                            Activar
+                        </button>
+
+                    </div>
+
+
+
+                    <div class="comando">
+
+                        <span>
+                            🎰 !tragamonedasmultiplier
+                        </span>
+
+                        <button class="activate-btn">
+                            Activar
+                        </button>
+
+                    </div>
+
+
+
+                    <div class="comando">
+
+                        <span>
+                            🗑️ !deletecode (name)
+                        </span>
+
+                        <button class="activate-btn">
+                            Activar
+                        </button>
+
+                    </div>
+
+
+
+                    <div class="comando">
+
+                        <span>
+                            📝 !createcode (name)
+                        </span>
+
+                        <button class="activate-btn">
+                            Activar
+                        </button>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 📋 MENÚ
+            ================================================= -->
+
+            <div class="menu">
+
+
+                <a href="dashboard.html">
+
+                    🏠
+
+                    <span>
+                        Volver al menú
+                    </span>
+
+                </a>
+
+
+                <a href="dashboard-recomendaciones.html">
+
+                    💡
+
+                    <span>
+                        Recomendaciones
+                    </span>
+
+                </a>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 📍 PÁGINAS
+            ================================================= -->
+
+            <div class="pages">
+
+                <span></span>
+
+                <span class="active"></span>
+
+                <span></span>
+
+            </div>
+
+
+        </div>
+
+
+    </div>
 
 
 </body>

@@ -2,6 +2,8 @@
 // 🟩 WORDLE COMMAND
 // ============================================================
 
+const { SlashCommandBuilder } = require("discord.js");
+
 const wordleManager =
     require("../../systems/wordle/wordleManager");
 
@@ -15,18 +17,14 @@ function buscarFuncion(...nombres) {
     for (const nombre of nombres) {
 
         if (
-            typeof wordleManager[nombre] ===
-            "function"
+            typeof wordleManager[nombre] === "function"
         ) {
-
             return wordleManager[nombre];
-
         }
 
     }
 
     return null;
-
 }
 
 
@@ -50,10 +48,6 @@ async function ejecutar(
                 .join(" ")
                 .trim();
 
-        // ----------------------------------------------------
-        // 🔎 BUSCAR FUNCIÓN PRINCIPAL
-        // ----------------------------------------------------
-
         const funcion =
             buscarFuncion(
                 "ejecutar",
@@ -64,9 +58,7 @@ async function ejecutar(
                 "handleWordle"
             );
 
-        if (
-            !funcion
-        ) {
+        if (!funcion) {
 
             console.error(
                 "❌ No se encontró una función compatible en wordleManager.js"
@@ -121,13 +113,7 @@ async function execute(
             interaction.user.id;
 
         const palabra =
-            interaction.options.getString(
-                "palabra"
-            ) || "";
-
-        // ----------------------------------------------------
-        // 🔎 BUSCAR FUNCIÓN PRINCIPAL
-        // ----------------------------------------------------
+            interaction.options.getString("palabra") || "";
 
         const funcion =
             buscarFuncion(
@@ -139,9 +125,7 @@ async function execute(
                 "handleWordle"
             );
 
-        if (
-            !funcion
-        ) {
+        if (!funcion) {
 
             console.error(
                 "❌ No se encontró una función compatible en wordleManager.js"
@@ -152,14 +136,11 @@ async function execute(
                 Object.keys(wordleManager)
             );
 
-            return interaction.reply(
-                {
-                    content:
-                        "❌ El sistema de Wordle no está conectado correctamente.",
-                    ephemeral:
-                        true
-                }
-            );
+            return interaction.reply({
+                content:
+                    "❌ El sistema de Wordle no está conectado correctamente.",
+                ephemeral: true
+            });
 
         }
 
@@ -182,14 +163,11 @@ async function execute(
             !interaction.deferred
         ) {
 
-            return interaction.reply(
-                {
-                    content:
-                        "❌ Ocurrió un error con Wordle.",
-                    ephemeral:
-                        true
-                }
-            );
+            return interaction.reply({
+                content:
+                    "❌ Ocurrió un error con Wordle.",
+                ephemeral: true
+            });
 
         }
 
@@ -204,11 +182,9 @@ async function execute(
 
 module.exports = {
 
-    nombre:
-        "wordle",
+    nombre: "wordle",
 
-    name:
-        "wordle",
+    name: "wordle",
 
     ejecutar,
 
@@ -218,33 +194,14 @@ module.exports = {
     // 🔵 SLASH COMMAND
     // ========================================================
 
-    data: {
-
-        name:
-            "wordle",
-
-        description:
-            "Juega Wordle",
-
-        options: [
-
-            {
-
-                type: 3,
-
-                name:
-                    "palabra",
-
-                description:
-                    "Tu intento de Wordle",
-
-                required:
-                    false
-
-            }
-
-        ]
-
-    }
+    data: new SlashCommandBuilder()
+        .setName("wordle")
+        .setDescription("Juega Wordle")
+        .addStringOption(option =>
+            option
+                .setName("palabra")
+                .setDescription("Tu intento de Wordle")
+                .setRequired(false)
+        )
 
 };

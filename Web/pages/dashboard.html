@@ -2,6 +2,7 @@
 <html lang="es">
 
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -9,103 +10,871 @@
 
     <link rel="stylesheet" href="../styles.css">
 
+    <style>
+
+        /* =====================================================
+           🎨 RESET
+        ===================================================== */
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            width: 100%;
+            min-height: 100%;
+            background: #050505 !important;
+        }
+
+
+        body.pagina1 {
+            width: 100%;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            color: #ffffff !important;
+
+            overflow-x: hidden;
+
+            background:
+                radial-gradient(
+                    circle at 12% 18%,
+                    rgba(255, 55, 0, 0.28),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 88% 25%,
+                    rgba(255, 130, 0, 0.20),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 50% 105%,
+                    rgba(255, 0, 0, 0.20),
+                    transparent 36%
+                ),
+                linear-gradient(
+                    135deg,
+                    #030303 0%,
+                    #0a0705 50%,
+                    #030303 100%
+                ) !important;
+        }
+
+
+
+        /* =====================================================
+           🚫 EVITAR FONDO BLANCO DE STYLES.CSS
+        ===================================================== */
+
+        body.pagina1 .overlay {
+            width: 100%;
+            min-height: 100vh;
+
+            margin: 0;
+            padding: 45px 20px;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: transparent !important;
+
+            position: relative;
+            z-index: 5;
+        }
+
+
+        body.pagina1 .overlay::before {
+            content: "";
+            position: fixed;
+
+            inset: 0;
+
+            background: transparent !important;
+
+            pointer-events: none;
+
+            z-index: -1;
+        }
+
+
+
+        /* =====================================================
+           🔥 BRILLOS DEL FONDO
+        ===================================================== */
+
+        body.pagina1::before {
+            content: "";
+
+            position: fixed;
+
+            width: 500px;
+            height: 500px;
+
+            left: -220px;
+            top: -220px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255, 45, 0, 0.18);
+
+            filter:
+                blur(110px);
+
+            pointer-events: none;
+
+            z-index: 1;
+        }
+
+
+        body.pagina1::after {
+            content: "";
+
+            position: fixed;
+
+            width: 500px;
+            height: 500px;
+
+            right: -220px;
+            bottom: -220px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255, 130, 0, 0.16);
+
+            filter:
+                blur(110px);
+
+            pointer-events: none;
+
+            z-index: 1;
+        }
+
+
+
+        /* =====================================================
+           ✨ LUCES DECORATIVAS
+        ===================================================== */
+
+        .background-light {
+            position: fixed;
+
+            width: 180px;
+            height: 180px;
+
+            border-radius: 50%;
+
+            pointer-events: none;
+
+            filter: blur(70px);
+
+            z-index: 2;
+
+            opacity: 0.8;
+        }
+
+
+        .light1 {
+            left: 5%;
+            top: 30%;
+
+            background:
+                rgba(255, 60, 0, 0.12);
+        }
+
+
+        .light2 {
+            right: 8%;
+            top: 15%;
+
+            background:
+                rgba(255, 180, 0, 0.10);
+        }
+
+
+        .light3 {
+            left: 45%;
+            bottom: 5%;
+
+            background:
+                rgba(255, 0, 0, 0.08);
+        }
+
+
+
+        /* =====================================================
+           🧊 TARJETA
+        ===================================================== */
+
+        .dashboard-card {
+
+            position: relative;
+            z-index: 10;
+
+            width: min(720px, 100%);
+
+            padding: 50px 45px;
+
+            text-align: center;
+
+            border-radius: 28px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(27, 27, 27, 0.97),
+                    rgba(8, 8, 8, 0.96)
+                ) !important;
+
+            border:
+                1px solid
+                rgba(255, 92, 0, 0.38);
+
+            box-shadow:
+                0 30px 90px rgba(0, 0, 0, 0.85),
+                0 0 55px rgba(255, 60, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.07);
+
+            backdrop-filter:
+                blur(20px);
+
+            -webkit-backdrop-filter:
+                blur(20px);
+
+            animation:
+                aparecer 0.7s ease;
+        }
+
+
+
+        @keyframes aparecer {
+
+            from {
+                opacity: 0;
+                transform:
+                    translateY(25px)
+                    scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform:
+                    translateY(0)
+                    scale(1);
+            }
+
+        }
+
+
+
+        /* =====================================================
+           🤖 LOGO
+        ===================================================== */
+
+        .logo {
+
+            width: 125px;
+            height: 125px;
+
+            object-fit: contain;
+
+            margin:
+                0 auto 18px;
+
+            display: block;
+
+            filter:
+                drop-shadow(
+                    0 0 12px
+                    rgba(255, 60, 0, 0.55)
+                )
+                drop-shadow(
+                    0 0 30px
+                    rgba(255, 120, 0, 0.18)
+                );
+
+            animation:
+                logoFloat 4s ease-in-out infinite;
+        }
+
+
+        @keyframes logoFloat {
+
+            0%,
+            100% {
+                transform:
+                    translateY(0);
+            }
+
+            50% {
+                transform:
+                    translateY(-6px);
+            }
+
+        }
+
+
+
+        /* =====================================================
+           🎮 TÍTULO
+        ===================================================== */
+
+        .title {
+
+            margin:
+                0 0 18px;
+
+            font-size:
+                clamp(28px, 5vw, 42px);
+
+            line-height:
+                1.15;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -1px;
+
+            color:
+                #ffffff !important;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ffffff,
+                    #ffb000,
+                    #ff4d00
+                );
+
+            -webkit-background-clip:
+                text;
+
+            background-clip:
+                text;
+
+            -webkit-text-fill-color:
+                transparent;
+        }
+
+
+
+        /* =====================================================
+           📄 DESCRIPCIÓN
+        ===================================================== */
+
+        .description {
+
+            max-width:
+                580px;
+
+            margin:
+                0 auto 28px;
+
+            color:
+                #cfcfcf !important;
+
+            font-size:
+                16px;
+
+            line-height:
+                1.7;
+        }
+
+
+        .description b {
+
+            color:
+                #ff8a00;
+        }
+
+
+
+        /* =====================================================
+           🏠 TEXTO
+        ===================================================== */
+
+        .select-text {
+
+            margin:
+                30px 0 18px;
+
+            color:
+                #eeeeee !important;
+
+            font-size:
+                15px;
+
+            font-weight:
+                700;
+        }
+
+
+
+        /* =====================================================
+           ➕ BOTÓN
+        ===================================================== */
+
+        .server-btn {
+
+            width:
+                100%;
+
+            max-width:
+                500px;
+
+            padding:
+                17px 25px;
+
+            border:
+                0;
+
+            border-radius:
+                14px;
+
+            color:
+                #ffffff !important;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ff4d00,
+                    #ff9200
+                ) !important;
+
+            font-size:
+                16px;
+
+            font-weight:
+                800;
+
+            cursor:
+                pointer;
+
+            box-shadow:
+                0 8px 28px
+                rgba(255, 75, 0, 0.28);
+
+            transition:
+                0.2s ease;
+        }
+
+
+        .server-btn:hover {
+
+            transform:
+                translateY(-3px);
+
+            filter:
+                brightness(1.08);
+
+            box-shadow:
+                0 13px 38px
+                rgba(255, 75, 0, 0.42);
+        }
+
+
+        .server-btn:active {
+
+            transform:
+                translateY(0);
+        }
+
+        #lista-servidores {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.servidor-opcion {
+    width: 100%;
+    padding: 14px 18px;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.045);
+
+    font-size: 15px;
+    font-weight: 700;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.servidor-opcion:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(255, 100, 0, 0.45);
+
+    background: rgba(255, 70, 0, 0.10);
+}
+
+
+        /* =====================================================
+           📋 MENÚ
+        ===================================================== */
+
+        .menu {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap:
+                15px;
+
+            margin-top:
+                28px;
+        }
+
+
+        .menu a {
+
+            min-height:
+                105px;
+
+            display:
+                flex;
+
+            flex-direction:
+                column;
+
+            justify-content:
+                center;
+
+            align-items:
+                center;
+
+            gap:
+                9px;
+
+            color:
+                #ffffff !important;
+
+            text-decoration:
+                none;
+
+            font-size:
+                15px;
+
+            font-weight:
+                800;
+
+            border-radius:
+                18px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(37, 37, 37, 0.90),
+                    rgba(13, 13, 13, 0.90)
+                ) !important;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+
+            box-shadow:
+                inset 0 1px 0
+                rgba(255, 255, 255, 0.04);
+
+            transition:
+                0.2s ease;
+        }
+
+
+        .menu a:hover {
+
+            transform:
+                translateY(-5px);
+
+            border-color:
+                rgba(255, 100, 0, 0.48);
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(58, 31, 18, 0.95),
+                    rgba(20, 13, 9, 0.95)
+                ) !important;
+
+            box-shadow:
+                0 12px 32px
+                rgba(255, 70, 0, 0.15);
+        }
+
+
+
+        /* =====================================================
+           📍 PÁGINAS
+        ===================================================== */
+
+        .pages {
+
+            display:
+                flex;
+
+            justify-content:
+                center;
+
+            gap:
+                8px;
+
+            margin-top:
+                32px;
+        }
+
+
+        .pages span {
+
+            width:
+                8px;
+
+            height:
+                8px;
+
+            display:
+                block;
+
+            border-radius:
+                50%;
+
+            background:
+                #444 !important;
+        }
+
+
+        .pages span.active {
+
+            width:
+                24px;
+
+            border-radius:
+                10px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ff4d00,
+                    #ffb000
+                ) !important;
+
+            box-shadow:
+                0 0 14px
+                rgba(255, 90, 0, 0.55);
+        }
+
+
+
+        /* =====================================================
+           📱 RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 600px) {
+
+            body.pagina1 .overlay {
+
+                padding:
+                    25px 12px;
+            }
+
+
+            .dashboard-card {
+
+                padding:
+                    35px 22px;
+
+                border-radius:
+                    22px;
+            }
+
+
+            .logo {
+
+                width:
+                    100px;
+
+                height:
+                    100px;
+            }
+
+
+            .title {
+
+                font-size:
+                    29px;
+            }
+
+
+            .description {
+
+                font-size:
+                    14px;
+            }
+
+
+            .menu {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .menu a {
+
+                min-height:
+                    80px;
+            }
+
+        }
+
+    </style>
+
 </head>
 
 
 <body class="pagina1">
 
 
-<div class="overlay">
+    <!-- =====================================================
+         ✨ LUCES DEL FONDO
+    ===================================================== -->
 
+    <div class="background-light light1"></div>
 
-    <div class="dashboard-card">
+    <div class="background-light light2"></div>
 
-
-        <img src="../images/ketchuru-logo.png" class="logo">
-
-
-        <h1 class="title">
-            🎮 Ketchuru Dashboard
-        </h1>
-
-
-        <p class="description">
-
-            Bienvenido al panel de configuración de <b>Ketchuru</b>.<br>
-
-            Desde aquí podrás administrar tu servidor,
-            activar funciones del bot y mejorar tu comunidad.
-
-        </p>
+    <div class="background-light light3"></div>
 
 
 
-        <p class="select-text">
+    <!-- =====================================================
+         🖥️ DASHBOARD
+    ===================================================== -->
 
-            🏠 Selecciona el servidor donde quieres configurar Ketchuru
-
-        </p>
-
-
-
-        <button class="server-btn">
-
-            ➕ Añadir / Elegir servidor
-
-        </button>
+    <div class="overlay">
 
 
-
-        <div class="menu">
-
-
-            <a href="dashboard-servidor.html">
-
-                ⚙️
-
-                <span>
-                    Configuración
-                </span>
-
-            </a>
+        <div class="dashboard-card">
 
 
+            <!-- 🤖 LOGO -->
 
-            <a href="dashboard-recomendaciones.html">
+            <img
+                src="../images/ketchuru-logo.png"
+                class="logo"
+                alt="Ketchuru Bot"
+            >
 
-                💡
 
-                <span>
-                    Recomendaciones
-                </span>
+            <!-- 🎮 TÍTULO -->
 
-            </a>
+            <h1 class="title">
+                🎮 Ketchuru Dashboard
+            </h1>
+
+
+            <!-- 📄 DESCRIPCIÓN -->
+
+            <p class="description">
+
+                Bienvenido al panel de configuración de
+                <b>Ketchuru</b>.<br>
+
+                Desde aquí podrás administrar tu servidor,
+                activar funciones del bot y mejorar tu comunidad.
+
+            </p>
+
+
+            <!-- 🏠 SERVIDOR -->
+
+            <p class="select-text">
+
+                🏠 Selecciona el servidor donde quieres configurar Ketchuru
+
+            </p>
+
+
+        <button class="server-btn" id="elegir-servidor">
+    ➕ Añadir / Elegir servidor
+</button>
+
+<div id="lista-servidores"></div>
+
+
+            <!-- 📋 MENÚ -->
+
+            <div class="menu">
+
+
+                <a href="dashboard-servidor.html">
+
+                    ⚙️
+
+                    <span>
+                        Configuración
+                    </span>
+
+                </a>
+
+
+
+                <a href="dashboard-recomendaciones.html">
+
+                    💡
+
+                    <span>
+                        Recomendaciones
+                    </span>
+
+                </a>
+
+
+            </div>
+
+
+            <!-- 📍 INDICADORES -->
+
+            <div class="pages">
+
+                <span class="active"></span>
+
+                <span></span>
+
+                <span></span>
+
+            </div>
 
 
         </div>
-
-
-
-
-        <div class="pages">
-
-            <span class="active"></span>
-
-            <span></span>
-
-            <span></span>
-
-        </div>
-
 
 
     </div>
 
+    <script src="/config.js"></script>
 
-
-</div>
-
-
+<script>
+    document.getElementById("elegir-servidor").addEventListener("click", () => {
+        window.location.href = `${window.API_URL}/api/auth/login`;
+    });
+</script>
 
 </body>
 

@@ -1,4 +1,9 @@
 const express = require("express");
+app.get("/config.js", (req, res) => {
+    res.type("application/javascript");
+    res.send(`window.API_URL = ${JSON.stringify(process.env.API_URL || "")};`);
+});
+
 const path = require("path");
 
 const app = express();

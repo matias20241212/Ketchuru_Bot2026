@@ -66,6 +66,8 @@ const rankingAPI =
 
 const express =
     require("express");
+    const cors = require("cors");
+    const crypto = require("crypto");
 
 const db =
     require("./database");
@@ -88,12 +90,7 @@ const {
 } =
     require("discord.js");
 
-const {
-    REST,
-    Routes
-} =
-    require("@discordjs/rest");
-
+const { REST, Routes } = require("discord.js");
 
 // ============================================================
 // 🌐 SERVIDOR WEB
@@ -101,13 +98,27 @@ const {
 
 const app =
     express();
+    app.use(cors({
+  origin: "https://ketchuru-web.onrender.com",
+  credentials: true
+}));
 
 const PORT =
     process.env.PORT || 3000;
 
+
+// ============================================================
+// 📦 MIDDLEWARE
+// ============================================================
+
 app.use(
     express.json()
 );
+
+
+// ============================================================
+// 📁 ARCHIVOS ESTÁTICOS DE LA WEB
+// ============================================================
 
 app.use(
     express.static(
@@ -118,8 +129,34 @@ app.use(
     )
 );
 
+
+// ============================================================
+// 🏠 PÁGINA PRINCIPAL
+// ============================================================
+
 app.get(
     "/",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "Web",
+                "public",
+                "index.html"
+            )
+        );
+
+    }
+);
+
+
+// ============================================================
+// 📊 DASHBOARD
+// ============================================================
+
+app.get(
+    "/dashboard",
     (req, res) => {
 
         res.sendFile(
@@ -134,10 +171,217 @@ app.get(
     }
 );
 
+
+// ============================================================
+// 🔌 API
+// ============================================================
+
 app.use(
     "/api",
     rankingAPI
 );
+
+// =====================================================
+// 🔐 DISCORD OAUTH2 — DASHBOARD
+// =====================================================
+
+const dashboardSessions = new Map();
+
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const OAUTH_REDIRECT_URI = process.env.OAUTH_REDIRECT_URI;
+
+function getCookie(req, name) {
+  const cookies = req.headers.cookie || "";
+
+  const match = cookies
+    .split(";")
+    .map(c => c.trim())
+    .find(c => c.startsWith(`${name}=`));
+
+  return match ? decodeURIComponent(match.split("=").slice(1).join("=")) : null;
+}
+
+function crearDashboardSession(data) {
+  const sessionId = crypto.randomBytes(32).toString("hex");
+
+  dashboardSessions.set(sessionId, {
+    ...data,
+    createdAt: Date.now()
+  });
+
+  return sessionId;
+}
+
+function obtenerDashboardSession(req) {
+  const sessionId = getCookie(req, "ketchuru_dashboard");
+
+  if (!sessionId) return null;
+
+  return dashboardSessions.get(sessionId) || null;
+}
+
+function requireDashboardAuth(req, res, next) {
+  const session = obtenerDashboardSession(req);
+
+  if (!session) {
+    return res.status(401).json({
+      error: "NO_AUTH"
+    });
+  }
+
+  req.dashboardSession = session;
+  next();
+}
+
+
+// =====================================================
+// 🔑 INICIAR LOGIN CON DISCORD
+// =====================================================
+
+app.get("/api/auth/login", (req, res) => {
+
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    response_type: "code",
+    redirect_uri: OAUTH_REDIRECT_URI,
+    scope: "identify guilds"
+  });
+
+  res.redirect(
+    `https://discord.com/oauth2/authorize?${params.toString()}`
+  );
+});
+
+
+// =====================================================
+// 🔄 CALLBACK DE DISCORD
+// =====================================================
+
+app.get("/api/auth/callback", async (req, res) => {
+
+  try {
+
+    const { code } = req.query;
+
+    if (!code) {
+      return res.status(400).send("Falta el código de autorización.");
+    }
+
+    // Obtener token
+    const tokenResponse = await fetch(
+      "https://discord.com/api/v10/oauth2/token",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+          grant_type: "authorization_code",
+          code,
+          redirect_uri: OAUTH_REDIRECT_URI
+        })
+      }
+    );
+
+    const tokenData = await tokenResponse.json();
+
+    if (!tokenResponse.ok) {
+
+      console.error("❌ Error OAuth:", tokenData);
+
+      return res.status(500).send(
+        "No se pudo iniciar sesión con Discord."
+      );
+    }
+
+    // Obtener usuario
+    const userResponse = await fetch(
+      "https://discord.com/api/v10/users/@me",
+      {
+        headers: {
+          Authorization: `${tokenData.token_type} ${tokenData.access_token}`
+        }
+      }
+    );
+
+    const user = await userResponse.json();
+
+    if (!userResponse.ok) {
+      return res.status(500).send(
+        "No se pudo obtener tu usuario de Discord."
+      );
+    }
+
+    // Crear sesión
+    const sessionId = crearDashboardSession({
+      accessToken: tokenData.access_token,
+      refreshToken: tokenData.refresh_token,
+      expiresIn: tokenData.expires_in,
+      user
+    });
+
+    res.setHeader(
+      "Set-Cookie",
+      `ketchuru_dashboard=${encodeURIComponent(sessionId)}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=604800`
+    );
+
+    res.redirect("https://ketchuru-web.onrender.com/");
+
+  } catch (error) {
+
+    console.error("❌ OAuth callback error:", error);
+
+    res.status(500).send(
+      "Error interno al iniciar sesión."
+    );
+  }
+});
+
+
+// =====================================================
+// 👤 USUARIO ACTUAL
+// =====================================================
+
+app.get("/api/auth/me", requireDashboardAuth, (req, res) => {
+
+  res.json({
+    authenticated: true,
+    user: req.dashboardSession.user
+  });
+
+});
+
+
+// =====================================================
+// 🚪 CERRAR SESIÓN
+// =====================================================
+
+app.get("/api/auth/logout", (req, res) => {
+
+  const sessionId = getCookie(
+    req,
+    "ketchuru_dashboard"
+  );
+
+  if (sessionId) {
+    dashboardSessions.delete(sessionId);
+  }
+
+  res.setHeader(
+    "Set-Cookie",
+    "ketchuru_dashboard=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0"
+  );
+
+  res.redirect("/dashboard");
+
+});
+
+// ============================================================
+// 🚀 INICIAR SERVIDOR WEB
+// ============================================================
 
 app.listen(
     PORT,
@@ -149,8 +393,6 @@ app.listen(
 
     }
 );
-
-
 // ============================================================
 // 🤖 CLIENTE DISCORD
 // ============================================================
@@ -176,10 +418,320 @@ const client =
 
     });
 
-console.log(
-    "✅ Cliente Discord creado correctamente."
+// ===============================
+// DASHBOARD - SERVIDORES DE DISCORD
+// ===============================
+
+app.get("/api/dashboard/servers", requireDashboardAuth, async (req, res) => {
+  try {
+    const accessToken = req.dashboardSession.accessToken;
+
+    const response = await fetch(
+      "https://discord.com/api/v10/users/@me/guilds",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    const guilds = await response.json();
+
+    if (!response.ok) {
+      console.error("❌ Error obteniendo servidores:", guilds);
+      return res.status(500).json({
+        error: "No se pudieron obtener tus servidores."
+      });
+    }
+
+    const servidores = guilds
+      .filter(guild => {
+        const permissions = BigInt(guild.permissions || "0");
+
+        const esOwner = guild.owner === true;
+        const esAdmin = (permissions & 8n) === 8n;
+        const gestionaServidor = (permissions & 32n) === 32n;
+
+        return esOwner || esAdmin || gestionaServidor;
+      })
+      .map(guild => ({
+        id: guild.id,
+        name: guild.name,
+        icon: guild.icon,
+        botInstalled: client.guilds.cache.has(guild.id)
+      }));
+
+    res.json({
+      success: true,
+      servers: servidores
+    });
+
+  } catch (error) {
+    console.error("❌ Error en /api/dashboard/servers:", error);
+
+    res.status(500).json({
+      error: "Error interno obteniendo los servidores."
+    });
+  }
+});
+
+// ===============================
+// DASHBOARD - ROLES DEL SERVIDOR
+// ===============================
+
+app.get(
+  "/api/dashboard/servers/:guildId/roles",
+  requireDashboardAuth,
+  async (req, res) => {
+    try {
+      const { guildId } = req.params;
+
+      const accessToken = req.dashboardSession.accessToken;
+
+      // Comprobar que el usuario tiene acceso al servidor
+      const response = await fetch(
+        "https://discord.com/api/v10/users/@me/guilds",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+
+      const guilds = await response.json();
+
+      if (!response.ok) {
+        return res.status(500).json({
+          error: "No se pudieron comprobar tus servidores."
+        });
+      }
+
+      const guild = guilds.find(server => server.id === guildId);
+
+      if (!guild) {
+        return res.status(403).json({
+          error: "No tienes acceso a este servidor."
+        });
+      }
+
+      // Comprobar que Ketchuru está dentro del servidor
+      const discordGuild = client.guilds.cache.get(guildId);
+
+      if (!discordGuild) {
+        return res.status(404).json({
+          error: "Ketchuru no está en este servidor."
+        });
+      }
+
+      // Obtener roles reales
+      const roles = discordGuild.roles.cache
+        .filter(role => role.id !== guildId)
+        .sort((a, b) => b.position - a.position)
+        .map(role => ({
+          id: role.id,
+          name: role.name,
+          position: role.position
+        }));
+
+      res.json({
+        success: true,
+        roles
+      });
+
+    } catch (error) {
+      console.error("❌ Error obteniendo roles:", error);
+
+      res.status(500).json({
+        error: "Error interno obteniendo los roles."
+      });
+    }
+  }
 );
 
+// ===============================
+// DASHBOARD - CONFIGURACIÓN
+// ===============================
+
+app.get(
+  "/api/dashboard/servers/:guildId/config",
+  requireDashboardAuth,
+  async (req, res) => {
+    try {
+      const { guildId } = req.params;
+
+      const accessToken = req.dashboardSession.accessToken;
+
+      // Comprobar que el usuario administra el servidor
+      const response = await fetch(
+        "https://discord.com/api/v10/users/@me/guilds",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+
+      const guilds = await response.json();
+
+      if (!response.ok) {
+        return res.status(500).json({
+          error: "No se pudieron comprobar tus servidores."
+        });
+      }
+
+      const guild = guilds.find(server => server.id === guildId);
+
+      if (!guild) {
+        return res.status(403).json({
+          error: "No tienes acceso a este servidor."
+        });
+      }
+
+      // Buscar configuración en Neon
+      const result = await db.query(
+        `
+        SELECT guild_id, dashboard_roles, command_roles
+        FROM dashboard_server_config
+        WHERE guild_id = $1
+        `,
+        [guildId]
+      );
+
+      // Si todavía no existe configuración
+      if (result.rows.length === 0) {
+        return res.json({
+          success: true,
+          guildId,
+          dashboardRoles: [],
+          commandRoles: {}
+        });
+      }
+
+      const config = result.rows[0];
+
+      res.json({
+        success: true,
+        guildId: config.guild_id,
+        dashboardRoles: config.dashboard_roles || [],
+        commandRoles: config.command_roles || {}
+      });
+
+    } catch (error) {
+      console.error("❌ Error obteniendo configuración:", error);
+
+      res.status(500).json({
+        error: "Error interno obteniendo la configuración."
+      });
+    }
+  }
+);
+
+// ===============================
+// DASHBOARD - GUARDAR CONFIGURACIÓN
+// ===============================
+
+app.post(
+  "/api/dashboard/servers/:guildId/config",
+  requireDashboardAuth,
+  async (req, res) => {
+    try {
+      const { guildId } = req.params;
+      const { dashboardRoles, commandRoles } = req.body;
+
+      const accessToken = req.dashboardSession.accessToken;
+
+      // Comprobar que el usuario administra el servidor
+      const response = await fetch(
+        "https://discord.com/api/v10/users/@me/guilds",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+
+      const guilds = await response.json();
+
+      if (!response.ok) {
+        return res.status(500).json({
+          error: "No se pudieron comprobar tus servidores."
+        });
+      }
+
+      const guild = guilds.find(server => server.id === guildId);
+
+      if (!guild) {
+        return res.status(403).json({
+          error: "No tienes acceso a este servidor."
+        });
+      }
+
+      // Comprobar que Ketchuru está dentro del servidor
+      const discordGuild = client.guilds.cache.get(guildId);
+
+      if (!discordGuild) {
+        return res.status(404).json({
+          error: "Ketchuru no está en este servidor."
+        });
+      }
+
+      // Obtener todos los roles existentes
+      const rolesValidos = new Set(
+        discordGuild.roles.cache.map(role => role.id)
+      );
+
+      // Validar roles del dashboard
+      const dashboardRolesValidos = Array.isArray(dashboardRoles)
+        ? dashboardRoles.filter(roleId => rolesValidos.has(roleId))
+        : [];
+
+      // Validar roles de cada comando
+      const commandRolesValidos = {};
+
+      if (commandRoles && typeof commandRoles === "object") {
+        for (const [command, roleIds] of Object.entries(commandRoles)) {
+          if (!Array.isArray(roleIds)) continue;
+
+          commandRolesValidos[command] = roleIds.filter(
+            roleId => rolesValidos.has(roleId)
+          );
+        }
+      }
+
+      // Guardar en Neon
+      await db.query(
+        `
+        INSERT INTO dashboard_server_config
+          (guild_id, dashboard_roles, command_roles, updated_at)
+        VALUES
+          ($1, $2::jsonb, $3::jsonb, CURRENT_TIMESTAMP)
+        ON CONFLICT (guild_id)
+        DO UPDATE SET
+          dashboard_roles = EXCLUDED.dashboard_roles,
+          command_roles = EXCLUDED.command_roles,
+          updated_at = CURRENT_TIMESTAMP
+        `,
+        [
+          guildId,
+          JSON.stringify(dashboardRolesValidos),
+          JSON.stringify(commandRolesValidos)
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: "Configuración guardada correctamente."
+      });
+
+    } catch (error) {
+      console.error("❌ Error guardando configuración:", error);
+
+      res.status(500).json({
+        error: "Error interno guardando la configuración."
+      });
+    }
+  }
+);
 
 // ============================================================
 // 📦 COMANDOS

@@ -1,22 +1,14 @@
+const { SlashCommandBuilder } = require("discord.js");
 const feriaStock = require("../../systems/feria/feriaStock");
 
-const CANAL_FERIA = "1535073298470281297";
+const CANAL_FERIA = "1549850167455256636";
 
 // ============================================================
 // 🎪 CREATE FERIA
 //
-// Formato:
-//
 // !createferia Sabado 12Pm - 8Am -6Utc
 //
-// El UTC es obligatorio.
-// Puede ser:
-// -12Utc
-// -6Utc
-// -4Utc
-// +0Utc
-// +1Utc
-// +12Utc
+// /createferia dia:Sabado hora_inicio:12Pm hora_fin:8Am utc:-6Utc
 // ============================================================
 
 
@@ -216,8 +208,6 @@ function obtenerProximoDia(
         diferencia
     );
 
-    // Si es hoy pero la hora ya pasó,
-    // lo mandamos a la próxima semana.
     if (
         diferencia === 0 &&
         fecha.getTime() <= ahora.getTime()
@@ -234,7 +224,7 @@ function obtenerProximoDia(
 
 
 // ============================================================
-// 🎪 EJECUTAR
+// 🎪 EJECUTAR COMANDO
 // ============================================================
 
 async function ejecutar(message, args) {
@@ -245,7 +235,7 @@ async function ejecutar(message, args) {
         // FORMATO
         // ----------------------------------------------------
 
-        if (args.length < 4) {
+        if (args.length < 5) {
 
             return message.reply(
                 [
@@ -424,8 +414,6 @@ async function ejecutar(message, args) {
             finMinutos -
             inicioMinutos;
 
-        // Si la hora final es menor,
-        // significa que termina al día siguiente.
         if (
             duracionMinutos <= 0
         ) {
@@ -577,6 +565,88 @@ async function ejecutar(message, args) {
 module.exports = {
 
     nombre: "createferia",
-    ejecutar
+
+    data: new SlashCommandBuilder()
+        .setName("createferia")
+        .setDescription("Crea una nueva Feria")
+        .addStringOption(option =>
+            option
+                .setName("dia")
+                .setDescription("Día de la Feria")
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option
+                .setName("hora_inicio")
+                .setDescription("Hora de inicio, por ejemplo 12Pm")
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option
+                .setName("hora_fin")
+                .setDescription("Hora de término, por ejemplo 8Am")
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option
+                .setName("utc")
+                .setDescription("Zona horaria, por ejemplo -6Utc")
+                .setRequired(true)
+        ),
+
+    ejecutar,
+
+    async execute(interaction) {
+
+        const dia =
+            interaction.options.getString("dia");
+
+        const horaInicio =
+            interaction.options.getString("hora_inicio");
+
+        const horaFin =
+            interaction.options.getString("hora_fin");
+
+        const utc =
+            interaction.options.getString("utc");
+
+        const args = [
+            dia,
+            horaInicio,
+            "-",
+            horaFin,
+            utc
+        ];
+
+        const message = {
+
+            content:
+                `/createferia ${args.join(" ")}`,
+
+            author:
+                interaction.user,
+
+            member:
+                interaction.member,
+
+            client:
+                interaction.client,
+
+            reply: async (contenido) => {
+
+                return interaction.reply(
+                    contenido
+                );
+
+            }
+
+        };
+
+        return ejecutar(
+            message,
+            args
+        );
+
+    }
 
 };
