@@ -71,6 +71,12 @@ const express =
 
 const db =
     require("./database");
+    
+const restrictManager =
+    require("./systems/restrict/restrictManager");
+
+    const wordleManager =
+    require("./systems/wordle/wordleManager");
 
 const topTragamonedas =
     require("./commands/Economy/toptragamonedas.js");
@@ -1792,7 +1798,6 @@ client.once(
     }
 );
 
-
 // ============================================================
 // 💬 MENSAJES
 // ============================================================
@@ -1809,33 +1814,187 @@ client.on(
 
         try {
 
-            // IGNORAR BOTS
+            // =================================================
+            // 🤖 IGNORAR BOTS
+            // =================================================
 
-            if (
-                message.author.bot
-            ) {
-
+            if (message.author.bot) {
                 return;
-
             }
-
-
-            // IGNORAR PRIVADOS
-
-            if (
-                !message.guild
-            ) {
-
-                return;
-
-            }
-
-            const guildId =
-                message.guild.id;
 
             const userId =
                 message.author.id;
 
+            // =================================================
+            // 🔒 RESTRICCIÓN GLOBAL
+            // =================================================
+
+            const restriction =
+                await restrictManager.getRestriction(userId);
+
+            if (restriction) {
+
+                console.log(
+                    `🔒 Usuario restringido intentó utilizar KetchuruBot: ${userId}`
+                );
+
+                return;
+            }
+
+            // =================================================
+            // 💬 MD
+            // =================================================
+
+            if (!message.guild) {
+
+                // ---------------------------------------------
+                // SOLO PROCESAMOS COMANDOS EN MD
+                // ---------------------------------------------
+
+                if (
+                    !message.content.startsWith("!")
+                ) {
+                    return;
+                }
+
+                const args =
+                    message.content
+                        .slice(1)
+                        .trim()
+                        .split(/ +/);
+
+                const commandName =
+                    args
+                        .shift()
+                        ?.toLowerCase();
+
+                if (!commandName) {
+                    return;
+                }
+
+                const command =
+                    client.commands?.get(
+                        commandName
+                    );
+
+                if (!command) {
+                    return;
+                }
+
+                const ejecutar =
+                    command.ejecutar ||
+                    command.execute;
+
+                if (
+                    typeof ejecutar !==
+                    "function"
+                ) {
+                    return;
+                }
+
+                console.log(
+                    `💬 Ejecutando !${commandName} por MD de ${message.author.tag}`
+                );
+
+                /*
+                 * Los comandos que necesiten servidor
+                 * deben comprobar message.guild por sí mismos.
+                 */
+                return ejecutar(
+                    message,
+                    args,
+                    db
+                );
+            }
+
+            // =================================================
+            // 🌐 SERVIDOR
+            // =================================================
+
+            const guildId =
+                message.guild.id;
+
+            // =================================================
+            // 🟩 WORDLE
+            // =================================================
+
+            const CANAL_WORDLE =
+                "1549850216067371068";
+
+            if (
+                message.channel.id === CANAL_WORDLE
+            ) {
+
+                if (
+                    message.content
+                        .toLowerCase()
+                        .startsWith("!wordle")
+                ) {
+                    return;
+                }
+
+                const palabra =
+                    message.content.trim();
+
+                if (!palabra) {
+                    return;
+                }
+
+                try {
+
+                    const resultado =
+                        await wordleManager.procesarIntento(
+                            userId,
+                            palabra
+                        );
+
+                    if (
+                        !resultado.ok &&
+                        resultado.error ===
+                            "No tienes una partida activa."
+                    ) {
+                        return;
+                    }
+
+                    if (!resultado.ok) {
+                        return message.reply(
+                            `❌ ${resultado.error}`
+                        );
+                    }
+
+                    let texto =
+                        resultado.tablero || "";
+
+                    if (resultado.terminada) {
+
+                        if (resultado.victoria) {
+
+                            texto +=
+                                `\n\n🎉 **¡Correcto!**\n💰 Recompensa: **${resultado.recompensa}**`;
+
+                        } else {
+
+                            texto +=
+                                `\n\n💀 **Has perdido.**\nLa palabra era: **${resultado.palabra}**`;
+                        }
+                    }
+
+                    return message.reply(
+                        texto
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ ERROR PROCESANDO WORDLE:",
+                        error
+                    );
+
+                    return message.reply(
+                        "❌ Ocurrió un error procesando tu intento de Wordle."
+                    );
+                }
+            }
 
             // =================================================
             // 💰 CREAR USUARIO
@@ -1857,7 +2016,6 @@ client.on(
                 ]
             );
 
-
             // =================================================
             // 📅 DAILY STATS
             // =================================================
@@ -1870,9 +2028,7 @@ client.on(
                     SET active_today = true
                     WHERE discord_id = $1
                     `,
-                    [
-                        userId
-                    ]
+                    [userId]
                 );
 
             } catch (error) {
@@ -1881,16 +2037,13 @@ client.on(
                     "⚠️ Error actualizando daily_stats:",
                     error
                 );
-
             }
-
 
             // =================================================
             // 🎯 MISIONES
             // =================================================
 
-            let misionMensaje =
-                null;
+            let misionMensaje = null;
 
             try {
 
@@ -1906,12 +2059,9 @@ client.on(
                     "❌ Error avanzando misión:",
                     error
                 );
-
             }
 
-            if (
-                misionMensaje
-            ) {
+            if (misionMensaje) {
 
                 await message.reply(
                     `
@@ -1925,9 +2075,7 @@ client.on(
                 ).catch(
                     console.error
                 );
-
             }
-
 
             // =================================================
             // 🔥 COMANDOS !
@@ -1946,16 +2094,18 @@ client.on(
                 const commandName =
                     args
                         .shift()
-                        .toLowerCase();
+                        ?.toLowerCase();
+
+                if (!commandName) {
+                    return;
+                }
 
                 const command =
                     client.commands?.get(
                         commandName
                     );
 
-                if (
-                    command
-                ) {
+                if (command) {
 
                     console.log(
                         `⚡ Ejecutando comando: !${commandName}`
@@ -1975,7 +2125,6 @@ client.on(
                         );
 
                         return;
-
                     }
 
                     return ejecutar(
@@ -1983,33 +2132,25 @@ client.on(
                         args,
                         db
                     );
-
                 }
-
             }
-
 
             // =================================================
             // 📊 SISTEMA DE MENSAJES
             // =================================================
 
             if (
-                !mensajes.has(
-                    guildId
-                )
+                !mensajes.has(guildId)
             ) {
 
                 mensajes.set(
                     guildId,
                     new Map()
                 );
-
             }
 
             if (
-                !statsServidor.has(
-                    guildId
-                )
+                !statsServidor.has(guildId)
             ) {
 
                 statsServidor.set(
@@ -2020,7 +2161,6 @@ client.on(
                             Date.now()
                     }
                 );
-
             }
 
             const guildData =
@@ -2034,16 +2174,13 @@ client.on(
                 );
 
             if (
-                !guildData.has(
-                    userId
-                )
+                !guildData.has(userId)
             ) {
 
                 guildData.set(
                     userId,
                     0
                 );
-
             }
 
             guildData.set(
@@ -2052,7 +2189,6 @@ client.on(
             );
 
             serverStats.total++;
-
 
             // =================================================
             // !MENSAJES
@@ -2064,16 +2200,12 @@ client.on(
             ) {
 
                 const count =
-                    guildData.get(
-                        userId
-                    ) || 0;
+                    guildData.get(userId) || 0;
 
                 return message.reply(
                     `📊 Has enviado **${count} mensajes** en este servidor`
                 );
-
             }
-
 
             // =================================================
             // !TOPMENSAJES
@@ -2127,15 +2259,12 @@ client.on(
                                 ? user.username
                                 : "Usuario"
                         }: ${count} mensajes\n`;
-
                 }
 
                 return message.reply(
                     text
                 );
-
             }
-
 
             // =================================================
             // !STATS
@@ -2178,7 +2307,6 @@ client.on(
                     `📅 Días activos: ${dias}\n` +
                     `📈 Promedio por día: ${promedio}`
                 );
-
             }
 
         } catch (error) {
@@ -2187,12 +2315,9 @@ client.on(
                 "❌ ERROR EN messageCreate:",
                 error
             );
-
         }
-
     }
 );
-
 
 // ============================================================
 // 🎁 INTERACCIONES
@@ -2203,6 +2328,89 @@ client.on(
     async (interaction) => {
 
         try {
+
+ // =================================================
+// 🔒 RESTRICCIÓN GLOBAL
+// =================================================
+
+const restriction =
+    await restrictManager.getRestriction(
+        interaction.user.id
+    );
+
+if (restriction) {
+
+    console.log(
+        `🔒 Usuario restringido intentó utilizar KetchuruBot mediante interacción: ${interaction.user.id}`
+    );
+
+    // =================================================
+    // 📩 ENVIAR MD
+    // =================================================
+
+    try {
+
+        let tiempo;
+
+        if (restriction.type === "permanent") {
+            tiempo = "Permanente";
+        } else if (restriction.expires_at) {
+            tiempo = `<t:${Math.floor(
+                new Date(restriction.expires_at).getTime() / 1000
+            )}:F>`;
+        } else {
+            tiempo = "Temporal";
+        }
+
+        await interaction.user.send(
+            `🔒 **Se te ha restringido el uso de KetchuruBot.**\n\n` +
+            `📝 **Razón:** ${restriction.reason}\n` +
+            `⏱️ **Tiempo:** ${tiempo}\n\n` +
+
+            `Por lo tanto, no podrás ocupar más KetchuruBot. No podrás ocupar:\n\n` +
+            `- 🎰 Tragamonedas\n` +
+            `- 🛒 Shop\n` +
+            `- 🏪 Persa\n` +
+            `- 📋 Misiones\n` +
+            `- 🎯 Ruleta\n` +
+            `- 🎁 Regalos\n` +
+            `- 📦 Inventario\n` +
+            `- 🎟️ Feria\n` +
+            `- 🧩 Wordle\n` +
+            `- 💰 Economía y dinero\n` +
+            `- 🏆 Rankings y estadísticas\n` +
+            `- 🎫 Códigos\n` +
+            `- 🎁 Recompensas diarias\n` +
+            `- ⚙️ Otros sistemas de KetchuruBot\n\n` +
+
+            `🚫 **Tampoco podrás quitarte esta restricción por tu cuenta.**\n` +
+            `🚫 **No podrás ponerte un rol desde la Dashboard de KetchuruBot para intentar quitar la restricción.**`
+        );
+
+    } catch (error) {
+
+        console.log(
+            `⚠️ No se pudo enviar MD a ${interaction.user.id}.`
+        );
+    }
+
+    // =================================================
+    // 🚫 BLOQUEAR INTERACCIÓN
+    // =================================================
+
+    if (
+        !interaction.replied &&
+        !interaction.deferred
+    ) {
+        return interaction.reply({
+            content:
+                "🔒 **No puedes utilizar KetchuruBot porque tienes una restricción activa.**",
+            ephemeral: true
+        });
+    }
+
+    return;
+}
 
             // =================================================
             // 🔵 SLASH COMMANDS /
@@ -2281,6 +2489,9 @@ client.on(
                 // =================================================
 
                 if (
+                    
+                    interaction.customId ===
+    "wordle_reiniciar" ||
 
                     interaction.customId ===
                         "confirmar_createferia" ||
@@ -2604,7 +2815,9 @@ ${objeto.amount}
                         require(
                             "./systems/inventoryMenu"
                         );
-
+                       
+                    
+    
                     const {
                         removeItem
                     } =
