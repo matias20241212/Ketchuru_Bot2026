@@ -12,11 +12,6 @@ const pool = require("../../database");
 //
 // Todas deben tener una columna "user_id" con el Discord ID.
 //
-// Ejemplo:
-// "users",
-// "inventory",
-// "daily_stats"
-//
 // NO agregues aquí tablas globales como settings, market global,
 // configuración del bot, etc.
 const USER_DATA_TABLES = [
@@ -132,6 +127,40 @@ async function getRestriction(userId) {
 }
 
 // ============================================================
+// OBTENER TODAS LAS RESTRICCIONES ACTIVAS
+// ============================================================
+//
+// Se usa principalmente para !restrictusers /restrictusers.
+//
+// También limpia automáticamente las restricciones temporales
+// que ya hayan expirado.
+// ============================================================
+
+async function getAllRestrictions() {
+    await ensureRestrictionsTable();
+
+    // Eliminar temporales expiradas.
+    await pool.query(
+        `
+        DELETE FROM ketchuru_restrictions
+        WHERE type = 'temporary'
+        AND expires_at IS NOT NULL
+        AND expires_at <= NOW()
+        `
+    );
+
+    const result = await pool.query(
+        `
+        SELECT *
+        FROM ketchuru_restrictions
+        ORDER BY created_at DESC
+        `
+    );
+
+    return result.rows;
+}
+
+// ============================================================
 // CREAR RESTRICCIÓN
 // ============================================================
 
@@ -191,6 +220,7 @@ async function createRestriction({
     //
     // La restricción temporal conserva todo el progreso.
     //
+
     if (type === "permanent") {
         await deleteUserData(userId);
     }
@@ -264,7 +294,14 @@ async function deleteUserData(userId) {
 }
 
 // ============================================================
-// ELIMINAR RESTRICCIÓN
+// ELIMINAR RESTRICCIÓN INDIVIDUAL
+// ============================================================
+//
+// Elimina cualquier tipo de restricción:
+// - temporary
+// - permanent
+//
+// NO restaura datos eliminados por una restricción permanente.
 // ============================================================
 
 async function removeRestriction(userId) {
@@ -284,13 +321,93 @@ async function removeRestriction(userId) {
 }
 
 // ============================================================
+// UNRESTRICT USER
+// ============================================================
+
+async function unrestrictUser(userId) {
+
+    const removedRestriction = await removeRestriction(userId);
+
+    if (!removedRestriction) {
+        return false;
+    }
+
+    console.log(
+        `🔓 Unrestrict: restricción eliminada para ${userId} (${removedRestriction.type}).`
+    );
+
+    return removedRestriction;
+}
+
+// ============================================================
+// UNRESTRICT GLOBAL
+// ============================================================
+//
+// Elimina TODAS las restricciones existentes.
+//
+// exceptUserIds contiene los usuarios que NO deben ser
+// desrestringidos.
+// ============================================================
+
+async function unrestrictGlobal(exceptUserIds = []) {
+
+    await ensureRestrictionsTable();
+
+    const exceptions = [
+        ...new Set(
+            exceptUserIds
+                .filter(Boolean)
+                .map(id => String(id))
+        )
+    ];
+
+    let result;
+
+    if (exceptions.length === 0) {
+
+        result = await pool.query(
+            `
+            DELETE FROM ketchuru_restrictions
+            RETURNING *
+            `
+        );
+
+    } else {
+
+        result = await pool.query(
+            `
+            DELETE FROM ketchuru_restrictions
+            WHERE NOT (user_id = ANY($1::varchar[]))
+            RETURNING *
+            `,
+            [exceptions]
+        );
+    }
+
+    console.log(
+        `🔓 Unrestrict Global: ${result.rowCount} restricción(es) eliminada(s).`
+    );
+
+    if (exceptions.length > 0) {
+        console.log(
+            `🛡️ Excepciones protegidas: ${exceptions.join(", ")}`
+        );
+    }
+
+    return result.rows;
+}
+
+// ============================================================
 // EXPORTS
 // ============================================================
 
 module.exports = {
     parseDuration,
     getRestriction,
+    getAllRestrictions,
     createRestriction,
     removeRestriction,
+    unrestrictUser,
+    unrestrictGlobal,
     deleteUserData
 };
